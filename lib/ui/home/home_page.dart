@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:memory_weakness/ui/play/play_setting_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +24,7 @@ class HomePage extends StatelessWidget {
             ),
             MenuItem(
               text: 'Setting',
-              route: '/',
+              route: '/setting',
             ),
             MenuItem(
               text: 'HighScore',
@@ -68,7 +69,7 @@ class MenuItem extends StatelessWidget {
             ),
           ),
         ),
-      )
+      ),
     );
   }
 }

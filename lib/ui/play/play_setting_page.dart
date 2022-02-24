@@ -75,8 +75,9 @@ class SettingPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    onTap: () {
-                      model.start();
+                    onTap: () async{
+                      model.connect();
+                      await Future.delayed(Duration(seconds: 3));
                       context.go('/play');
                     },
                   ),
