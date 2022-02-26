@@ -17,6 +17,7 @@ class PlayPage extends StatelessWidget {
         builder: (context, model, _) {
           return Column(
             children: [
+              Text(model.test),
               Wrap(
                 alignment: WrapAlignment.start,
                 spacing: 8.h,
@@ -93,11 +94,11 @@ Widget back(SettingViewModel model, int id) {
             if (model.openValues.length >= 2) {
               model.isCanTap = false;
             }
-            final sendBackList = <String,dynamic>{
-              'id':id,
-              'openValues':model.openValues,
-              'openIds':model.openIds,
-              'isCanTap':model.isCanTap,
+            final sendBackList = <String, dynamic>{
+              'id': id,
+              'openValues': model.openValues,
+              'openIds': model.openIds,
+              'isCanTap': model.isCanTap,
             };
             model.socket.emit('back2server', sendBackList);
             model.notify();
@@ -122,7 +123,7 @@ Widget checkButton(SettingViewModel model) {
           child: GestureDetector(
             child: const Text('OK'),
             onTap: () {
-              model.socket.emit('next2server','');
+              model.socket.emit('next2server', '');
             },
           ),
         ),

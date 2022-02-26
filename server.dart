@@ -1,30 +1,23 @@
 import 'package:socket_io/socket_io.dart';
 import 'dart:math' as math;
 
-bool isCanTap = true;
+int turn = 0;
 List openValues = [];
 List openIds = [];
 List visibleList = [];
 List isBackList = [];
 List valueList = [];
+List clientList = [];
 main() {
   // Dart server
   var io = Server();
-  var clientsNum = 0;
   io.on('connection', (client) {
-    print(clientsNum);
-    print(isCanTap);
-    print(openValues);
-    print(openIds);
-    print(visibleList);
-    print(isBackList);
-    print(valueList);
+    print(client.id);
     client.on(
       'initServer',
       (_) {
-        if (clientsNum == 0) {
-          print('first');
-          isCanTap = true;
+        if (clientList.isEmpty) {
+          turn = 0;
           openValues = [];
           openIds = [];
           visibleList = [];
@@ -32,54 +25,39 @@ main() {
           valueList = [];
           init();
         }
+        clientList.add(client.id);
         final stateMap = <String, dynamic>{
-          'isCanTap': isCanTap,
+          'turn': clientList[turn],
           'openValues': openValues,
           'openIds': openIds,
           'visibleList': visibleList,
           'isBackList': isBackList,
           'valueList': valueList,
+          'token': client.id,
         };
-          print(isCanTap);
-          print(openValues);
-          print(openIds);
-          print(visibleList);
-          print(isBackList);
-          print(valueList);
-        io.sockets.emit('initClient', stateMap);
-        clientsNum++;
+        client.emit('initClient', stateMap);
       },
     );
     client.on(
       'disconnect',
       (_) {
-        clientsNum--;
+        clientList.remove(client.id);
       },
     );
     client.on(
       'back2server',
       (data) {
-        print('back2server');
         isBackList[data['id']] = false;
         openValues.clear();
         openValues.addAll(data['openValues']);
         openIds.clear();
         openIds.addAll(data['openIds']);
-        isCanTap = data['isCanTap'];
-        print(isCanTap);
-        print(openValues);
-        print(openIds);
-        print(visibleList);
-        print(isBackList);
-        print(valueList);
         io.sockets.emit('back2client', data);
       },
     );
     client.on(
       'next2server',
       (_) {
-        print('next2server');
-        print(_);
         if (openValues[0] == openValues[1]) {
           visibleList[openIds[0]] = false;
           visibleList[openIds[1]] = false;
@@ -88,17 +66,14 @@ main() {
           isBackList[openIds[0]] = true;
           isBackList[openIds[1]] = true;
           reset();
+          turn++;
         }
+        turn = turn % clientList.length;
         final nextMap = {
           'visibleList': visibleList,
           'isBackList': isBackList,
+          'turn': clientList[turn],
         };
-        print(isCanTap);
-        print(openValues);
-        print(openIds);
-        print(visibleList);
-        print(isBackList);
-        print(valueList);
         io.sockets.emit('next2client', nextMap);
       },
     );
@@ -109,7 +84,6 @@ main() {
 void reset() {
   openValues = [];
   openIds = [];
-  isCanTap = true;
 }
 
 void init() {

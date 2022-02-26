@@ -5,7 +5,8 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 class SettingViewModel with ChangeNotifier {
   int questionNum = 3;
   bool isCanTap = true;
-  bool canCommunicate = false;
+  String token = '';
+  String test = '';
   List openValues = [];
   List openIds = [];
   List visibleList = [];
@@ -45,14 +46,13 @@ class SettingViewModel with ChangeNotifier {
         isBackList.addAll(data['isBackList']),
         openValues = [],
         openIds = [],
-        isCanTap = true,
+        checkTurn(data['turn']),
         notify(),
       },
     );
     socket.on(
       'initClient',
       (data) => {
-        isCanTap = data['isCanTap'],
         openValues.clear(),
         openValues.addAll(data['openValues']),
         openIds.clear(),
@@ -63,12 +63,23 @@ class SettingViewModel with ChangeNotifier {
         isBackList.addAll(data['isBackList']),
         valueList.clear(),
         valueList.addAll(data['valueList']),
-        canCommunicate = true,
+        token = data['token'],
+        checkTurn(data['turn']),
         notify(),
       },
     );
     socket.emit('initServer');
     notify();
+  }
+
+  void checkTurn(String turn) {
+    if (token == turn) {
+      isCanTap = true;
+      test = 'your turn';
+    } else {
+      isCanTap = false;
+      test = 'other turn';
+    }
   }
 
   void notify() => notifyListeners();
