@@ -1,41 +1,85 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SettingViewModel with ChangeNotifier {
   int questionNum = 3;
   bool isCanTap = true;
-  List<int> openValues = [];
-  List<int> openIds = [];
-  List<bool> visibleList = [];
-  List<bool> isBackList = [];
-  List<int> valueList = [];
+  String token = '';
+  String test = '';
+  List openValues = [];
+  List openIds = [];
+  List visibleList = [];
+  List isBackList = [];
+  List valueList = [];
+  IO.Socket socket = IO.io(
+    'http://10.7.11.21:3000',
+    IO.OptionBuilder()
+        .setTransports(['websocket']) // for Flutter or Dart VM
+        .disableAutoConnect() // disable auto-connection
+        .setExtraHeaders({'foo': 'bar'}) // optional
+        .build(),
+  );
 
-  void start() {
-    reset();
-    isBackList = [];
-    visibleList = [];
-    final rand = math.Random();
-    for (int i = 0; i < questionNum; i++) {
-      visibleList.add(true);
-      visibleList.add(true);
-      isBackList.add(true);
-      isBackList.add(true);
-      valueList.add(i);
-      valueList.add(i);
-    }
-    for (var i = questionNum - 1; i > 0; i--) {
-      final n = rand.nextInt(i + 1);
-      final temp = valueList[i];
-      valueList[i] = valueList[n];
-      valueList[n] = temp;
-    }
+  void connect() {
+    print('object');
+    socket.onDisconnect((_) => print('disconnect'));
+    socket.connect();
+    socket.on(
+      'back2client',
+      (data) => {
+        isBackList[data['id']] = false,
+        openValues.clear(),
+        openValues.addAll(data['openValues']),
+        openIds.clear(),
+        openIds.addAll(data['openIds']),
+        isCanTap = data['isCanTap'],
+        notify(),
+      },
+    );
+    socket.on(
+      'next2client',
+      (data) => {
+        visibleList.clear(),
+        visibleList.addAll(data['visibleList']),
+        isBackList.clear(),
+        isBackList.addAll(data['isBackList']),
+        openValues = [],
+        openIds = [],
+        checkTurn(data['turn']),
+        notify(),
+      },
+    );
+    socket.on(
+      'initClient',
+      (data) => {
+        openValues.clear(),
+        openValues.addAll(data['openValues']),
+        openIds.clear(),
+        openIds.addAll(data['openIds']),
+        visibleList.clear(),
+        visibleList.addAll(data['visibleList']),
+        isBackList.clear(),
+        isBackList.addAll(data['isBackList']),
+        valueList.clear(),
+        valueList.addAll(data['valueList']),
+        token = data['token'],
+        checkTurn(data['turn']),
+        notify(),
+      },
+    );
+    socket.emit('initServer');
     notify();
   }
 
-  void reset(){
-    openValues = [];
-    openIds = [];
-    isCanTap = true;
+  void checkTurn(String turn) {
+    if (token == turn) {
+      isCanTap = true;
+      test = 'your turn';
+    } else {
+      isCanTap = false;
+      test = 'other turn';
+    }
   }
 
   void notify() => notifyListeners();

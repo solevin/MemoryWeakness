@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
-import 'package:go_router/go_router.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:provider/provider.dart';
 
 class PlayPage extends StatelessWidget {
@@ -17,6 +17,7 @@ class PlayPage extends StatelessWidget {
         builder: (context, model, _) {
           return Column(
             children: [
+              Text(model.test),
               Wrap(
                 alignment: WrapAlignment.start,
                 spacing: 8.h,
@@ -93,6 +94,13 @@ Widget back(SettingViewModel model, int id) {
             if (model.openValues.length >= 2) {
               model.isCanTap = false;
             }
+            final sendBackList = <String, dynamic>{
+              'id': id,
+              'openValues': model.openValues,
+              'openIds': model.openIds,
+              'isCanTap': model.isCanTap,
+            };
+            model.socket.emit('back2server', sendBackList);
             model.notify();
           }
         },
@@ -115,16 +123,7 @@ Widget checkButton(SettingViewModel model) {
           child: GestureDetector(
             child: const Text('OK'),
             onTap: () {
-              if (model.openValues[0] == model.openValues[1]) {
-                model.visibleList[model.openIds[0]] = false;
-                model.visibleList[model.openIds[1]] = false;
-                model.reset();
-              } else {
-                model.isBackList[model.openIds[0]] = true;
-                model.isBackList[model.openIds[1]] = true;
-                model.reset();
-              }
-              model.notify();
+              model.socket.emit('next2server', '');
             },
           ),
         ),
