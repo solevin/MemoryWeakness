@@ -1,108 +1,149 @@
 import 'package:socket_io/socket_io.dart';
 import 'dart:math' as math;
 
-int turn = 0;
-List openValues = [];
-List openIds = [];
-List visibleList = [];
-List isBackList = [];
-List valueList = [];
-List clientList = [];
+Map<String, RoomState> roomMap = {};
 main() {
-  // Dart server
   var io = Server();
   io.on('connection', (client) {
-    print(client.id);
+    var roomId = '-1';
+    client.emit('initClient',client.id);
     client.on(
-      'initServer',
+      'initServerRoom',
       (_) {
-        if (clientList.isEmpty) {
-          turn = 0;
-          openValues = [];
-          openIds = [];
-          visibleList = [];
-          isBackList = [];
-          valueList = [];
-          init();
-        }
-        clientList.add(client.id);
-        final stateMap = <String, dynamic>{
-          'turn': clientList[turn],
-          'openValues': openValues,
-          'openIds': openIds,
-          'visibleList': visibleList,
-          'isBackList': isBackList,
-          'valueList': valueList,
-          'token': client.id,
+        var room = RoomState();
+        final roomName = setRoomName();
+        room.init();
+        room.clientList.add(client.id);
+        roomMap.addAll({roomName : room});
+        roomId = roomName;
+        client.join(roomName);
+        final returnMap = {
+          'openValues':room.openValues,
+          'openIds':room.openIds,
+          'visibleList':room.visibleList,
+          'isBackList':room.isBackList,
+          'valueList':room.valueList,
+          'turn':room.clientList[room.turn],
         };
-        client.emit('initClient', stateMap);
+        client.emit('initClientRoom', returnMap);
+      },
+    );
+    client.on(
+      'joinServerRoom',
+      (joinId) {
+        roomId = joinId;
+        var afterChange = roomMap[roomId];
+        afterChange!.clientList.add(client.id);
+        roomMap.update(roomId, (value) => afterChange);
+        client.join(roomId);
+        final returnMap = {
+          'openValues':afterChange.openValues,
+          'openIds':afterChange.openIds,
+          'visibleList':afterChange.visibleList,
+          'isBackList':afterChange.isBackList,
+          'valueList':afterChange.valueList,
+          'turn':afterChange.clientList[afterChange.turn],
+        };
+        client.emit('initClientRoom', returnMap);
       },
     );
     client.on(
       'disconnect',
       (_) {
-        clientList.remove(client.id);
+        var afterChange = roomMap[roomId];
+        afterChange!.clientList.remove(client.id);
+        roomMap.update(roomId, (value) => afterChange);
+        if (afterChange.clientList.isEmpty) {
+          roomMap.remove(roomId);
+        }
       },
     );
     client.on(
       'back2server',
       (data) {
-        isBackList[data['id']] = false;
-        openValues.clear();
-        openValues.addAll(data['openValues']);
-        openIds.clear();
-        openIds.addAll(data['openIds']);
-        io.sockets.emit('back2client', data);
+        var afterChange = roomMap[roomId];
+        afterChange!.isBackList[data['id']] = false;
+        afterChange.openValues.clear();
+        afterChange.openValues.addAll(data['openValues']);
+        afterChange.openIds.clear();
+        afterChange.openIds.addAll(data['openIds']);
+        roomMap.update(roomId, (value) => afterChange);
+        final returnMap = {
+          'id': data['id'],
+          'openValues': afterChange.openValues,
+          'openIds': afterChange.openIds,
+        };
+        io.sockets.to(roomId).emit('back2client', returnMap);
       },
     );
     client.on(
       'next2server',
       (_) {
-        if (openValues[0] == openValues[1]) {
-          visibleList[openIds[0]] = false;
-          visibleList[openIds[1]] = false;
-          reset();
+        var afterChange = roomMap[roomId];
+        if (afterChange!.openValues[0] == afterChange.openValues[1]) {
+          afterChange.visibleList[afterChange.openIds[0]] = false;
+          afterChange.visibleList[afterChange.openIds[1]] = false;
+          afterChange.reset();
         } else {
-          isBackList[openIds[0]] = true;
-          isBackList[openIds[1]] = true;
-          reset();
-          turn++;
+          afterChange.isBackList[afterChange.openIds[0]] = true;
+          afterChange.isBackList[afterChange.openIds[1]] = true;
+          afterChange.reset();
+          afterChange.turn++;
         }
-        turn = turn % clientList.length;
-        final nextMap = {
-          'visibleList': visibleList,
-          'isBackList': isBackList,
-          'turn': clientList[turn],
+        afterChange.turn = afterChange.turn % afterChange.clientList.length;
+        roomMap.update(roomId, (value) => afterChange);
+        final returnMap = {
+          'visibleList': afterChange.visibleList,
+          'isBackList': afterChange.isBackList,
+          'turn': afterChange.clientList[afterChange.turn],
         };
-        io.sockets.emit('next2client', nextMap);
+        io.sockets.to(roomId).emit('next2client', returnMap);
       },
     );
   });
   io.listen(3000);
 }
 
-void reset() {
-  openValues = [];
-  openIds = [];
+class RoomState {
+  int turn = 0;
+  List openValues = [];
+  List openIds = [];
+  List visibleList = [];
+  List isBackList = [];
+  List valueList = [];
+  List clientList = [];
+
+  void reset() {
+    openValues = [];
+    openIds = [];
+  }
+
+  void init() {
+    reset();
+    isBackList = [];
+    visibleList = [];
+    final rand = math.Random();
+    for (int i = 0; i < 3; i++) {
+      visibleList.add(true);
+      visibleList.add(true);
+      isBackList.add(true);
+      isBackList.add(true);
+      valueList.add(i);
+      valueList.add(i);
+    }
+    for (var i = 3 - 1; i > 0; i--) {
+      final n = rand.nextInt(i + 1);
+      final temp = valueList[i];
+      valueList[i] = valueList[n];
+      valueList[n] = temp;
+    }
+  }
 }
 
-void init() {
-  reset();
-  isBackList = [];
-  visibleList = [];
-  final rand = math.Random();
-  for (int i = 0; i < 3; i++) {
-    visibleList.add(true);
-    visibleList.add(true);
-    isBackList.add(true);
-    isBackList.add(true);
-    valueList.add(i);
-    valueList.add(i);
-  }
-  for (var i = 3 - 1; i > 0; i--) {
-    final n = rand.nextInt(i + 1);
-    final temp = valueList[i];
-    valueList[i] = valueList[n];
-    valueList[n] = temp;
+String setRoomName() {
+  for (int i = 0;; i++) {
+    if (roomMap.containsKey(i.toString()) == false) {
+      return i.toString();
+    }
   }
 }

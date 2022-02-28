@@ -22,7 +22,6 @@ class SettingViewModel with ChangeNotifier {
   );
 
   void connect() {
-    print('object');
     socket.onDisconnect((_) => print('disconnect'));
     socket.connect();
     socket.on(
@@ -33,7 +32,6 @@ class SettingViewModel with ChangeNotifier {
         openValues.addAll(data['openValues']),
         openIds.clear(),
         openIds.addAll(data['openIds']),
-        isCanTap = data['isCanTap'],
         notify(),
       },
     );
@@ -51,7 +49,7 @@ class SettingViewModel with ChangeNotifier {
       },
     );
     socket.on(
-      'initClient',
+      'initClientRoom',
       (data) => {
         openValues.clear(),
         openValues.addAll(data['openValues']),
@@ -63,12 +61,17 @@ class SettingViewModel with ChangeNotifier {
         isBackList.addAll(data['isBackList']),
         valueList.clear(),
         valueList.addAll(data['valueList']),
-        token = data['token'],
         checkTurn(data['turn']),
         notify(),
       },
     );
-    socket.emit('initServer');
+    socket.on(
+      'initClient',
+      (data) => {
+        token = data,
+        notify(),
+      },
+    );
     notify();
   }
 

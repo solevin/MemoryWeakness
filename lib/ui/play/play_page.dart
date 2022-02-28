@@ -98,7 +98,6 @@ Widget back(SettingViewModel model, int id) {
               'id': id,
               'openValues': model.openValues,
               'openIds': model.openIds,
-              'isCanTap': model.isCanTap,
             };
             model.socket.emit('back2server', sendBackList);
             model.notify();
