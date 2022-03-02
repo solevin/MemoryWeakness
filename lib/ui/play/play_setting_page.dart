@@ -76,7 +76,6 @@ class SettingPage extends StatelessWidget {
                       ),
                     ),
                     onTap: () async{
-                      model.connect();
                       model.socket.emit('initServerRoom','');
                       await Future.delayed(Duration(seconds: 3));
                       context.go('/play');
@@ -84,33 +83,33 @@ class SettingPage extends StatelessWidget {
                   ),
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: SizedBox(
-                  height: 40.h,
-                  width: 100.w,
-                  child: GestureDetector(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(color: Colors.orange),
-                      child: Center(
-                        child: Text(
-                          '2',
-                          style: TextStyle(
-                            fontSize: 30.sp,
-                            color: textColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                    onTap: () async{
-                      model.connect();
-                      await Future.delayed(Duration(seconds: 3));
-                      model.socket.emit('joinServerRoom','0');
-                      context.go('/play');
-                    },
-                  ),
-                ),
-              ),
+              // Padding(
+              //   padding: EdgeInsets.all(8.h),
+              //   child: SizedBox(
+              //     height: 40.h,
+              //     width: 100.w,
+              //     child: GestureDetector(
+              //       child: DecoratedBox(
+              //         decoration: BoxDecoration(color: Colors.orange),
+              //         child: Center(
+              //           child: Text(
+              //             '2',
+              //             style: TextStyle(
+              //               fontSize: 30.sp,
+              //               color: textColor,
+              //             ),
+              //           ),
+              //         ),
+              //       ),
+              //       onTap: () async{
+              //         model.connect();
+              //         await Future.delayed(Duration(seconds: 3));
+              //         model.socket.emit('joinServerRoom','0');
+              //         context.go('/play');
+              //       },
+              //     ),
+              //   ),
+              // ),
             ],
           );
         },

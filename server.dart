@@ -8,8 +8,16 @@ main() {
     var roomId = '-1';
     client.emit('initClient',client.id);
     client.on(
+      'getRoom',
+      (_) {
+        final keyList = roomMap.keys.toList();
+        client.emit('setRoom', keyList);
+      },
+    );
+    client.on(
       'initServerRoom',
       (_) {
+        print('init');
         var room = RoomState();
         final roomName = setRoomName();
         room.init();

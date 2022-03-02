@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
           children: const [
             MenuItem(
               text: 'Play',
-              route: '/playSetting',
+              route: '/room',
             ),
             MenuItem(
               text: 'View',
@@ -50,7 +50,13 @@ class MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
+      onTap: () async {
+        if (text == 'Play') {
+          print('connect');
+          context.read<SettingViewModel>().connect();
+          context.read<SettingViewModel>().socket.emit('getRoom');
+          await Future.delayed(Duration(seconds: 3));
+        }
         context.go(route);
       },
       child: Container(

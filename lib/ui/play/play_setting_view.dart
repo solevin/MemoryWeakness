@@ -12,6 +12,7 @@ class SettingViewModel with ChangeNotifier {
   List visibleList = [];
   List isBackList = [];
   List valueList = [];
+  List roomList = [];
   IO.Socket socket = IO.io(
     'http://10.7.11.21:3000',
     IO.OptionBuilder()
@@ -24,6 +25,14 @@ class SettingViewModel with ChangeNotifier {
   void connect() {
     socket.onDisconnect((_) => print('disconnect'));
     socket.connect();
+    socket.on(
+      'setRoom',
+      (data) => {
+        roomList.clear(),
+        roomList.addAll(data),
+        notify(),
+      },
+    );
     socket.on(
       'back2client',
       (data) => {
