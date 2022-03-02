@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:provider/provider.dart';
 
 class PlayPage extends StatelessWidget {
@@ -21,7 +20,7 @@ class PlayPage extends StatelessWidget {
               Wrap(
                 alignment: WrapAlignment.start,
                 spacing: 8.h,
-                children: pannels(model),
+                children: panels(model),
               ),
               checkButton(model),
             ],
@@ -32,15 +31,15 @@ class PlayPage extends StatelessWidget {
   }
 }
 
-List<Widget> pannels(SettingViewModel model) {
-  var pannelList = <Widget>[];
+List<Widget> panels(SettingViewModel model) {
+  var panelList = <Widget>[];
   for (int i = 0; i < model.questionNum * 2; i++) {
-    pannelList.add(eachPannel(model, i));
+    panelList.add(eachPanel(model, i));
   }
-  return pannelList;
+  return panelList;
 }
 
-Widget eachPannel(SettingViewModel model, int id) {
+Widget eachPanel(SettingViewModel model, int id) {
   if (model.visibleList[id] == false) {
     return Padding(
       padding: EdgeInsets.all(8.r),
@@ -98,7 +97,6 @@ Widget back(SettingViewModel model, int id) {
               'id': id,
               'openValues': model.openValues,
               'openIds': model.openIds,
-              'isCanTap': model.isCanTap,
             };
             model.socket.emit('back2server', sendBackList);
             model.notify();
