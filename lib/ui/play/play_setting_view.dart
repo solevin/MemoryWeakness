@@ -1,10 +1,10 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart';
 
 class SettingViewModel with ChangeNotifier {
   int questionNum = 3;
   bool isCanTap = true;
+  bool isComplete = false;
   String token = '';
   String test = '';
   List openValues = [];
@@ -13,9 +13,9 @@ class SettingViewModel with ChangeNotifier {
   List isBackList = [];
   List valueList = [];
   List roomList = [];
-  IO.Socket socket = IO.io(
+  Socket socket = io(
     'http://10.7.11.21:3000',
-    IO.OptionBuilder()
+    OptionBuilder()
         .setTransports(['websocket']) // for Flutter or Dart VM
         .disableAutoConnect() // disable auto-connection
         .setExtraHeaders({'foo': 'bar'}) // optional
@@ -30,6 +30,7 @@ class SettingViewModel with ChangeNotifier {
       (data) => {
         roomList.clear(),
         roomList.addAll(data),
+        isComplete = true,
         notify(),
       },
     );
@@ -41,6 +42,7 @@ class SettingViewModel with ChangeNotifier {
         openValues.addAll(data['openValues']),
         openIds.clear(),
         openIds.addAll(data['openIds']),
+        isComplete = true,
         notify(),
       },
     );
@@ -54,6 +56,7 @@ class SettingViewModel with ChangeNotifier {
         openValues = [],
         openIds = [],
         checkTurn(data['turn']),
+        isComplete = true,
         notify(),
       },
     );
@@ -71,6 +74,7 @@ class SettingViewModel with ChangeNotifier {
         valueList.clear(),
         valueList.addAll(data['valueList']),
         checkTurn(data['turn']),
+        isComplete = true,
         notify(),
       },
     );
@@ -78,6 +82,7 @@ class SettingViewModel with ChangeNotifier {
       'initClient',
       (data) => {
         token = data,
+        isComplete = true,
         notify(),
       },
     );

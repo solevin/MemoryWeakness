@@ -85,7 +85,7 @@ Widget back(SettingViewModel model, int id) {
         color: Colors.black,
       ),
       child: GestureDetector(
-        onTap: () {
+        onTap: () async {
           if (model.isCanTap == true) {
             model.isBackList[id] = false;
             model.openValues.add(model.valueList[id]);
@@ -99,6 +99,10 @@ Widget back(SettingViewModel model, int id) {
               'openIds': model.openIds,
             };
             model.socket.emit('back2server', sendBackList);
+            model.isComplete = false;
+            while (model.isComplete == false) {
+              await Future.delayed(const Duration(milliseconds: 100));
+            }
             model.notify();
           }
         },
@@ -120,8 +124,12 @@ Widget checkButton(SettingViewModel model) {
           ),
           child: GestureDetector(
             child: const Text('OK'),
-            onTap: () {
+            onTap: () async {
               model.socket.emit('next2server', '');
+              model.isComplete = false;
+              while (model.isComplete == false) {
+                await Future.delayed(const Duration(milliseconds: 100));
+              }
             },
           ),
         ),

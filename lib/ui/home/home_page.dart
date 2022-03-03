@@ -55,7 +55,10 @@ class MenuItem extends StatelessWidget {
           print('connect');
           context.read<SettingViewModel>().connect();
           context.read<SettingViewModel>().socket.emit('getRoom');
-          await Future.delayed(Duration(seconds: 3));
+          context.read<SettingViewModel>().isComplete = false;
+          while (context.read<SettingViewModel>().isComplete == false) {
+            await Future.delayed(const Duration(milliseconds: 100));
+          }
         }
         context.go(route);
       },
