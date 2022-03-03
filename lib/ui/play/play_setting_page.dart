@@ -75,9 +75,12 @@ class SettingPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    onTap: () async{
-                      model.socket.emit('initServerRoom','');
-                      await Future.delayed(Duration(seconds: 3));
+                    onTap: () async {
+                      model.socket.emit('initServerRoom', '');
+                      model.isComplete = false;
+                      while (model.isComplete == false) {
+                        await Future.delayed(const Duration(milliseconds: 100));
+                      }
                       context.go('/play');
                     },
                   ),

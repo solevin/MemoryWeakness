@@ -12,10 +12,31 @@ class RoomPage extends StatelessWidget {
       body: Consumer<SettingViewModel>(
         builder: (context, model, _) {
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: roomCard(model, context),
-            ),
+            child:
+                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Column(children: roomCard(model, context)),
+              SizedBox(
+                height: 30.h,
+                width: 100.w,
+                child: GestureDetector(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(color: Colors.red),
+                    child: Center(
+                        child: Text(
+                      '更新',
+                      style: TextStyle(fontSize: 20.sp, color: Colors.white),
+                    )),
+                  ),
+                  onTap: () async {
+                    model.socket.emit('getRoom');
+                    model.isComplete = false;
+                    while (model.isComplete == false) {
+                      await Future.delayed(const Duration(milliseconds: 100));
+                    }
+                  },
+                ),
+              )
+            ]),
           );
         },
       ),
@@ -45,8 +66,12 @@ Widget panel(String name, SettingViewModel model, BuildContext context) {
     child: Card(
       child: GestureDetector(
         child: Text(name),
-        onTap: () {
+        onTap: () async {
           model.socket.emit('joinServerRoom', name);
+          model.isComplete = false;
+          while (model.isComplete == false) {
+            await Future.delayed(const Duration(milliseconds: 100));
+          }
           context.go('/play');
         },
       ),
