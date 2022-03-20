@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
@@ -62,7 +63,30 @@ class RoomPage extends StatelessWidget {
                       },
                     ),
                   ),
-                )
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.h),
+                  child: SizedBox(
+                    height: 30.h,
+                    width: 100.w,
+                    child: GestureDetector(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(color: Colors.red),
+                        child: Center(
+                          child: Text(
+                            'uid',
+                            style:
+                                TextStyle(fontSize: 20.sp, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      onTap: () async {
+                        String uid = FirebaseAuth.instance.currentUser!.uid;
+                        print(uid);
+                      },
+                    ),
+                  ),
+                ),
               ],
             ),
           );
