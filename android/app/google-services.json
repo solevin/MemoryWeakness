@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "403774407212",
+    "project_id": "memoryweakness",
+    "storage_bucket": "memoryweakness.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403774407212:android:22be40a912efa4d247c789",
+        "android_client_info": {
+          "package_name": "com.example.memory_weakness"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "403774407212-feokipuu5l8k14si8h2nj36cik71d1dg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFXZ_jTUomOjVQ0cveEhJCYIfWiFYEG7Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "403774407212-feokipuu5l8k14si8h2nj36cik71d1dg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
