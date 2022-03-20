@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
@@ -12,31 +14,57 @@ class RoomPage extends StatelessWidget {
       body: Consumer<SettingViewModel>(
         builder: (context, model, _) {
           return Center(
-            child:
-                Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Column(children: roomCard(model, context)),
-              SizedBox(
-                height: 30.h,
-                width: 100.w,
-                child: GestureDetector(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.red),
-                    child: Center(
-                        child: Text(
-                      '更新',
-                      style: TextStyle(fontSize: 20.sp, color: Colors.white),
-                    )),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(children: roomCard(model, context)),
+                SizedBox(
+                  height: 30.h,
+                  width: 100.w,
+                  child: GestureDetector(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: Colors.red),
+                      child: Center(
+                          child: Text(
+                        '更新',
+                        style: TextStyle(fontSize: 20.sp, color: Colors.white),
+                      )),
+                    ),
+                    onTap: () async {
+                      model.socket.emit('getRoom');
+                      model.isComplete = false;
+                      while (model.isComplete == false) {
+                        await Future.delayed(const Duration(milliseconds: 100));
+                      }
+                    },
                   ),
-                  onTap: () async {
-                    model.socket.emit('getRoom');
-                    model.isComplete = false;
-                    while (model.isComplete == false) {
-                      await Future.delayed(const Duration(milliseconds: 100));
-                    }
-                  },
                 ),
-              )
-            ]),
+                Padding(
+                  padding: EdgeInsets.all(8.h),
+                  child: SizedBox(
+                    height: 30.h,
+                    width: 100.w,
+                    child: GestureDetector(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(color: Colors.red),
+                        child: Center(
+                          child: Text(
+                            'set',
+                            style:
+                                TextStyle(fontSize: 20.sp, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      onTap: () async {
+                        await FirebaseFirestore.instance
+                            .collection('users')
+                            .add({'price': 650, 'date': FieldValue.serverTimestamp()});
+                      },
+                    ),
+                  ),
+                )
+              ],
+            ),
           );
         },
       ),
@@ -66,12 +94,8 @@ Widget panel(String name, SettingViewModel model, BuildContext context) {
     child: Card(
       child: GestureDetector(
         child: Text(name),
-        onTap: () async {
+        onTap: () {
           model.socket.emit('joinServerRoom', name);
-          model.isComplete = false;
-          while (model.isComplete == false) {
-            await Future.delayed(const Duration(milliseconds: 100));
-          }
           context.go('/play');
         },
       ),
