@@ -8,6 +8,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class CreateRoomPage extends StatelessWidget {
+  static Route<dynamic> route() {
+    return MaterialPageRoute<dynamic>(
+      builder: (_) => const CreateRoomPage(),
+    );
+  }
   const CreateRoomPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
