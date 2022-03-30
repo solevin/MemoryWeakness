@@ -1,7 +1,8 @@
 import 'package:memory_weakness/ui/home/home_page.dart';
 import 'package:memory_weakness/ui/play/play_setting_page.dart';
 import 'package:memory_weakness/ui/play/play_page.dart';
-import 'package:memory_weakness/ui/room/room_page.dart';
+import 'package:memory_weakness/ui/room/createroom_page.dart';
+import 'package:memory_weakness/ui/room/room_list_page.dart';
 import 'package:go_router/go_router.dart';
 
 GoRouter router = GoRouter(
@@ -30,6 +31,11 @@ GoRouter router = GoRouter(
       name: 'room',
       path: '/room',
       builder: (context, state) => const RoomPage(),
+    ),
+    GoRoute(
+      name: 'createRoom',
+      path: '/createRoom',
+      builder: (context, state) => const CreateRoomPage(),
     ),
   ]
 );

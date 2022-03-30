@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/router.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
+import 'package:memory_weakness/ui/room/create_rooom_view.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 
@@ -21,6 +22,9 @@ void main() async {
         providers: [
           provider.ChangeNotifierProvider(
             create: (_) => SettingViewModel(),
+          ),
+          provider.ChangeNotifierProvider(
+            create: (_) => CreateRoomViewModel(),
           ),
         ],
         child: ScreenUtilInit(
