@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
+import 'package:memory_weakness/ui/play/play_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -81,38 +82,13 @@ class SettingPage extends StatelessWidget {
                       while (model.isComplete == false) {
                         await Future.delayed(const Duration(milliseconds: 100));
                       }
-                      context.go('/play');
+                      Navigator.of(context).push<dynamic>(
+                        PlayPage.route(),
+                      );
                     },
                   ),
                 ),
               ),
-              // Padding(
-              //   padding: EdgeInsets.all(8.h),
-              //   child: SizedBox(
-              //     height: 40.h,
-              //     width: 100.w,
-              //     child: GestureDetector(
-              //       child: DecoratedBox(
-              //         decoration: BoxDecoration(color: Colors.orange),
-              //         child: Center(
-              //           child: Text(
-              //             '2',
-              //             style: TextStyle(
-              //               fontSize: 30.sp,
-              //               color: textColor,
-              //             ),
-              //           ),
-              //         ),
-              //       ),
-              //       onTap: () async{
-              //         model.connect();
-              //         await Future.delayed(Duration(seconds: 3));
-              //         model.socket.emit('joinServerRoom','0');
-              //         context.go('/play');
-              //       },
-              //     ),
-              //   ),
-              // ),
             ],
           );
         },

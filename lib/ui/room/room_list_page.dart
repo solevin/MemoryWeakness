@@ -1,15 +1,20 @@
-import 'dart:ffi';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
+import 'package:memory_weakness/ui/play/play_page.dart';
+import 'package:memory_weakness/ui/room/createroom_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class RoomPage extends StatelessWidget {
+  static Route<dynamic> route() {
+    return MaterialPageRoute<dynamic>(
+      builder: (_) => const RoomPage(),
+    );
+  }
+
   const RoomPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -102,7 +107,9 @@ class RoomPage extends StatelessWidget {
         builder: (context, model, _) {
           return FloatingActionButton(
             onPressed: () {
-              context.go('/createRoom');
+              Navigator.of(context).push<dynamic>(
+                CreateRoomPage.route(),
+              );
             },
           );
         },
@@ -126,7 +133,9 @@ Widget panel(String name, SettingViewModel model, BuildContext context) {
         child: Text(name),
         onTap: () {
           model.socket.emit('joinServerRoom', name);
-          context.go('/play');
+          Navigator.of(context).push<dynamic>(
+            PlayPage.route(),
+          );
         },
       ),
     ),
@@ -175,8 +184,8 @@ Widget presenceView(QueryDocumentSnapshot<Object?> roomSnapshot) {
       width: 200.w,
       height: 50.h,
       child: Center(
-        child:
-            Text('questionQuantity : $questionQuantity  maxMembers : $maxMembers'),
+        child: Text(
+            'questionQuantity : $questionQuantity  maxMembers : $maxMembers'),
       ),
     ),
   );

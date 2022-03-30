@@ -4,8 +4,12 @@ import 'package:memory_weakness/ui/play/play_setting_view.dart';
 import 'package:provider/provider.dart';
 
 class PlayPage extends StatelessWidget {
+  static Route<dynamic> route() {
+    return MaterialPageRoute<dynamic>(
+      builder: (_) => const PlayPage(),
+    );
+  }
   const PlayPage({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -2,81 +2,112 @@ import 'package:flutter/material.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:memory_weakness/ui/room/room_list_page.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  static Route<dynamic> route() {
+    return MaterialPageRoute<dynamic>(
+      builder: (_) => const HomePage(),
+    );
+  }
 
+  const HomePage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            MenuItem(
-              text: 'Play',
-              route: '/room',
+          children: [
+            InkWell(
+              child: Container(
+                width: 250.w,
+                height: 70.h,
+                padding: EdgeInsets.all(5.r),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Center(
+                  child: Text(
+                    'Play',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                    ),
+                  ),
+                ),
+              ),
+              onTap: () {
+                Navigator.of(context).push<dynamic>(
+                  RoomPage.route(),
+                );
+              },
             ),
-            MenuItem(
-              text: 'View',
-              route: '/view',
+            InkWell(
+              child: Container(
+                width: 250.w,
+                height: 70.h,
+                padding: EdgeInsets.all(5.r),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Center(
+                  child: Text(
+                    'View',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                    ),
+                  ),
+                ),
+              ),
+              onTap: () {
+              },
             ),
-            MenuItem(
-              text: 'Setting',
-              route: '/setting',
+            InkWell(
+              child: Container(
+                width: 250.w,
+                height: 70.h,
+                padding: EdgeInsets.all(5.r),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Center(
+                  child: Text(
+                    'Setting',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                    ),
+                  ),
+                ),
+              ),
+              onTap: () {
+              },
             ),
-            MenuItem(
-              text: 'HighScore',
-              route: '/highScore',
+            InkWell(
+              child: Container(
+                width: 250.w,
+                height: 70.h,
+                padding: EdgeInsets.all(5.r),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: Center(
+                  child: Text(
+                    'HighScore',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                    ),
+                  ),
+                ),
+              ),
+              onTap: () {
+              },
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class MenuItem extends StatelessWidget {
-  const MenuItem({
-    Key? key,
-    required this.text,
-    required this.route,
-  }) : super(key: key);
-
-  final String text;
-  final String route;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        if (text == 'Play') {
-          print('connect');
-          context.read<SettingViewModel>().connect();
-          context.read<SettingViewModel>().socket.emit('getRoom');
-          context.read<SettingViewModel>().isComplete = false;
-          while (context.read<SettingViewModel>().isComplete == false) {
-            await Future.delayed(const Duration(milliseconds: 100));
-          }
-        }
-        context.go(route);
-      },
-      child: Container(
-        width: 250.w,
-        height: 70.h,
-        padding: EdgeInsets.all(5.r),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black),
-          borderRadius: BorderRadius.circular(10.r),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 20.sp,
-            ),
-          ),
         ),
       ),
     );
