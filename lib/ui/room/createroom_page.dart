@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -119,18 +120,34 @@ class CreateRoomPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                      onTap: () async {
-                        final uid = FirebaseAuth.instance.currentUser!.uid;
-                        await FirebaseFirestore.instance
-                            .collection('room')
-                            .doc(uid)
-                            .set({
-                          'members': [uid],
-                          'maxMembers': model.selectedMemberQuantity,
-                          'questionQuantity': model.selectedQuestionQuantity,
-                          'openIds': [],
-                        });
-                      },
+                    onTap: () async {
+                      final uid = FirebaseAuth.instance.currentUser!.uid;
+                      var valueList = [];
+                      final valueLength = model.selectedQuestionQuantity;
+                      final rand = math.Random();
+                      for (int i = 0; i < valueLength; i++) {
+                        valueList.add(i);
+                        valueList.add(i);
+                      }
+                      for (var i = valueLength * 2 - 1; i > 0; i--) {
+                        final n = rand.nextInt(i);
+                        final temp = valueList[i];
+                        valueList[i] = valueList[n];
+                        valueList[n] = temp;
+                      }
+                      await FirebaseFirestore.instance
+                          .collection('room')
+                          .doc(uid)
+                          .set({
+                        'members': [uid],
+                        'maxMembers': model.selectedMemberQuantity,
+                        'questionQuantity': model.selectedQuestionQuantity,
+                        'values': valueList,
+                        'openIds': [],
+                        'visibleList': [],
+                        'turn': uid,
+                      });
+                    },
                   ),
                 ),
               ),
