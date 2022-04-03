@@ -23,50 +23,6 @@ class RoomPage extends StatelessWidget {
           children: [
             // Column(children: roomCard(model, context)),
             buildTaskList(context),
-            Padding(
-              padding: EdgeInsets.all(8.h),
-              child: SizedBox(
-                height: 30.h,
-                width: 100.w,
-                child: GestureDetector(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.red),
-                    child: Center(
-                      child: Text(
-                        'set',
-                        style: TextStyle(fontSize: 20.sp, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  onTap: () async {
-                    await FirebaseFirestore.instance.collection('users').add(
-                        {'price': 650, 'date': FieldValue.serverTimestamp()});
-                  },
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(8.h),
-              child: SizedBox(
-                height: 30.h,
-                width: 100.w,
-                child: GestureDetector(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(color: Colors.red),
-                    child: Center(
-                      child: Text(
-                        'uid',
-                        style: TextStyle(fontSize: 20.sp, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  onTap: () async {
-                    String uid = FirebaseAuth.instance.currentUser!.uid;
-                    print(uid);
-                  },
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -142,6 +98,9 @@ Widget presenceView(
           .doc(roomSnapshot.id)
           .update({
         'members': addedMemberList,
+      });
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
+        'roomID': roomSnapshot.id,
       });
       Navigator.of(context).push<dynamic>(
         StandbyRoomPage.route(roomName: roomSnapshot.id),

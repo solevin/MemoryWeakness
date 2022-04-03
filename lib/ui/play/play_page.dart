@@ -17,70 +17,83 @@ class PlayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roomName = ModalRoute.of(context)!.settings.arguments;
-    return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('room').snapshots(),
-        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          if (snapshot.hasError) {
-            return const Text('Something went wrong');
-          }
-          final roomSnapshotList = snapshot.data!.docs;
-          int roomIndex = 0;
-          for (int i = 0; i < roomSnapshotList.length; i++) {
-            if (roomSnapshotList[i].id == roomName) {
-              roomIndex = i;
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Scaffold(
+        body: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('room').snapshots(),
+          builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
             }
-          }
-          final roomSnapshot = roomSnapshotList[roomIndex];
-          List<int> openIds = roomSnapshot['openIds'].cast<int>();
-          final isVisible = openIds.length == 2;
-          return Padding(
-            padding: EdgeInsets.fromLTRB(0, 30.h, 0, 0),
-            child: Column(
-              children: [
-                Wrap(
-                  alignment: WrapAlignment.start,
-                  spacing: 8.h,
-                  children: panels(roomSnapshot),
-                ),
-                Visibility(
-                  child: checkButton(roomSnapshot),
-                  visible: isVisible,
-                ),
-                // Padding(
-                //   padding: EdgeInsets.all(8.r),
-                //   child: Container(
-                //     width: 70.w,
-                //     height: 30.h,
-                //     color: Colors.purple,
-                //     child: GestureDetector(
-                //       child: Center(
-                //         child: Text(
-                //           'return',
-                //           style:
-                //               TextStyle(fontSize: 20.sp, color: Colors.white),
-                //         ),
-                //       ),
-                //       onTap: () async {
-                //         await FirebaseFirestore.instance
-                //             .collection('room')
-                //             .doc(roomSnapshot.id)
-                //             .update({
-                //           'openIds': [],
-                //         });
-                //       },
-                //     ),
-                //   ),
-                // ),
-              ],
-            ),
-          );
-        },
+            if (snapshot.hasError) {
+              return const Text('Something went wrong');
+            }
+            final roomSnapshotList = snapshot.data!.docs;
+            int roomIndex = 0;
+            for (int i = 0; i < roomSnapshotList.length; i++) {
+              if (roomSnapshotList[i].id == roomName) {
+                roomIndex = i;
+              }
+            }
+            final roomSnapshot = roomSnapshotList[roomIndex];
+            List<int> openIds = roomSnapshot['openIds'].cast<int>();
+            final isVisible = openIds.length == 2;
+            final turnText = roomSnapshot['turn'] + 'のターン';
+            return Padding(
+              padding: EdgeInsets.fromLTRB(0, 30.h, 0, 0),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(8.r),
+                    child: Center(
+                      child: Text(
+                        turnText,
+                        style: TextStyle(fontSize: 15.sp, color: Colors.black),
+                      ),
+                    ),
+                  ),
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8.h,
+                    children: panels(roomSnapshot),
+                  ),
+                  Visibility(
+                    child: checkButton(roomSnapshot),
+                    visible: isVisible,
+                  ),
+                  // Padding(
+                  //   padding: EdgeInsets.all(8.r),
+                  //   child: Container(
+                  //     width: 70.w,
+                  //     height: 30.h,
+                  //     color: Colors.purple,
+                  //     child: GestureDetector(
+                  //       child: Center(
+                  //         child: Text(
+                  //           'return',
+                  //           style:
+                  //               TextStyle(fontSize: 20.sp, color: Colors.white),
+                  //         ),
+                  //       ),
+                  //       onTap: () async {
+                  //         await FirebaseFirestore.instance
+                  //             .collection('room')
+                  //             .doc(roomSnapshot.id)
+                  //             .update({
+                  //           'openIds': [],
+                  //         });
+                  //       },
+                  //     ),
+                  //   ),
+                  // ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -167,7 +180,10 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
       width: 60.w,
       color: Colors.purple,
       child: GestureDetector(
-        child: const Text('OK'),
+        child: Text(
+          'OK',
+          style: TextStyle(fontSize: 20.sp, color: Colors.white),
+        ),
         onTap: () async {
           List<bool> visibleList = roomSnapshot['visibleList'].cast<bool>();
           List<int> openIds = roomSnapshot['openIds'].cast<int>();
