@@ -156,11 +156,18 @@ class CreateRoomPage extends StatelessWidget {
                         'visibleList': visibleList,
                         'turn': uid,
                       });
-                      final test = await FirebaseFirestore.instance
+                      final roomSnapshot = await FirebaseFirestore.instance
                           .collection('room')
                           .get();
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(uid)
+                          .update({
+                        'roomID': uid,
+                      });
                       Navigator.of(context).push<dynamic>(
-                        StandbyRoomPage.route(roomName: test.docs[0].id),
+                        StandbyRoomPage.route(
+                            roomName: roomSnapshot.docs[0].id),
                       );
                     },
                   ),
