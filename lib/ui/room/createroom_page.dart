@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/room/create_rooom_view.dart';
-import 'package:go_router/go_router.dart';
+import 'package:memory_weakness/ui/room/standby_room_page.dart';
 import 'package:provider/provider.dart';
 
 class CreateRoomPage extends StatelessWidget {
@@ -13,6 +13,7 @@ class CreateRoomPage extends StatelessWidget {
       builder: (_) => const CreateRoomPage(),
     );
   }
+
   const CreateRoomPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
@@ -152,6 +153,12 @@ class CreateRoomPage extends StatelessWidget {
                         'visibleList': [],
                         'turn': uid,
                       });
+                      final test = await FirebaseFirestore.instance
+                          .collection('room')
+                          .get();
+                      Navigator.of(context).push<dynamic>(
+                        StandbyRoomPage.route(roomName: test.docs[0].id),
+                      );
                     },
                   ),
                 ),
