@@ -131,9 +131,12 @@ class CreateRoomPage extends StatelessWidget {
                       var valueList = [];
                       final valueLength = model.selectedQuestionQuantity;
                       final rand = math.Random();
+                      var visibleList = [];
                       for (int i = 0; i < valueLength; i++) {
                         valueList.add(i);
                         valueList.add(i);
+                        visibleList.add(true);
+                        visibleList.add(true);
                       }
                       for (var i = valueLength * 2 - 1; i > 0; i--) {
                         final n = rand.nextInt(i);
@@ -150,7 +153,7 @@ class CreateRoomPage extends StatelessWidget {
                         'questionQuantity': model.selectedQuestionQuantity,
                         'values': valueList,
                         'openIds': [],
-                        'visibleList': [],
+                        'visibleList': visibleList,
                         'turn': uid,
                       });
                       final test = await FirebaseFirestore.instance

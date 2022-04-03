@@ -1,11 +1,9 @@
-import 'dart:html';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/home/home_page.dart';
-import 'package:memory_weakness/ui/play/play_setting_view.dart';
+import 'package:memory_weakness/ui/play/play_page.dart';
 import 'package:provider/provider.dart';
 
 class StandbyRoomPage extends StatelessWidget {
@@ -58,37 +56,36 @@ class StandbyRoomPage extends StatelessWidget {
           );
         },
       )),
-      body: Consumer<SettingViewModel>(
-        builder: (context, model, _) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                buildTaskList(roomName as String),
-                Padding(
-                  padding: EdgeInsets.all(8.h),
-                  child: SizedBox(
-                    height: 30.h,
-                    width: 100.w,
-                    child: GestureDetector(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(color: Colors.red),
-                        child: Center(
-                          child: Text(
-                            'uid',
-                            style:
-                                TextStyle(fontSize: 20.sp, color: Colors.white),
-                          ),
-                        ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            buildTaskList(roomName as String),
+            Padding(
+              padding: EdgeInsets.all(8.h),
+              child: SizedBox(
+                height: 30.h,
+                width: 100.w,
+                child: GestureDetector(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(color: Colors.red),
+                    child: Center(
+                      child: Text(
+                        'start',
+                        style: TextStyle(fontSize: 20.sp, color: Colors.white),
                       ),
-                      onTap: () async {},
                     ),
                   ),
+                  onTap: () async {
+                    Navigator.of(context).push<dynamic>(
+                      PlayPage.route(roomName: roomName),
+                    );
+                  },
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }

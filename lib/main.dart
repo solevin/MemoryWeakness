@@ -4,8 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:memory_weakness/router.dart';
-import 'package:memory_weakness/ui/play/play_setting_view.dart';
+import 'package:memory_weakness/ui/home/home_page.dart';
 import 'package:memory_weakness/ui/room/create_rooom_view.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
@@ -20,9 +19,6 @@ void main() async {
     ProviderScope(
       child: provider.MultiProvider(
         providers: [
-          provider.ChangeNotifierProvider(
-            create: (_) => SettingViewModel(),
-          ),
           provider.ChangeNotifierProvider(
             create: (_) => CreateRoomViewModel(),
           ),
@@ -57,25 +53,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, BoxConstraints constraints) {
-        return MaterialApp.router(
-          routeInformationParser: router.routeInformationParser,
-          routerDelegate: router.routerDelegate,
-          title: 'Memory Weakness',
-          builder: (context, widget) {
-            ScreenUtil.init(
-              constraints,
-              context: context,
-              designSize: const Size(360, 690),
-            );
-            return widget!;
-          },
-          theme: ThemeData(
-            primarySwatch: materialWhite,
-          ),
-          darkTheme: ThemeData.dark(),
-        );
+    return MaterialApp(
+      title: 'Memory Weakness',
+      theme: ThemeData(
+        primarySwatch: materialWhite,
+      ),
+      darkTheme: ThemeData.dark(),
+      initialRoute: '/',
+      routes: <String, WidgetBuilder>{
+        '/': (BuildContext context) => HomePage(),
       },
     );
   }

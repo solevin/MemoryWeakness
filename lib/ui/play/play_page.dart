@@ -1,33 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:memory_weakness/ui/play/play_setting_view.dart';
-import 'package:provider/provider.dart';
 
 class PlayPage extends StatelessWidget {
-  static Route<dynamic> route() {
+  static Route<dynamic> route({
+    @required String? roomName,
+  }) {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const PlayPage(),
+      settings: RouteSettings(arguments: roomName),
     );
   }
+
   const PlayPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final roomName = ModalRoute.of(context)!.settings.arguments;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('PLAY'),
-      ),
-      body: Consumer<SettingViewModel>(
-        builder: (context, model, _) {
-          return Column(
-            children: [
-              Text(model.test),
-              Wrap(
-                alignment: WrapAlignment.start,
-                spacing: 8.h,
-                children: panels(model),
-              ),
-              checkButton(model),
-            ],
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('room').snapshots(),
+        builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          if (snapshot.hasError) {
+            return const Text('Something went wrong');
+          }
+          final roomSnapshotList = snapshot.data!.docs;
+          int roomIndex = 0;
+          for (int i = 0; i < roomSnapshotList.length; i++) {
+            if (roomSnapshotList[i].id == roomName) {
+              roomIndex = i;
+            }
+          }
+          final roomSnapshot = roomSnapshotList[roomIndex];
+          List<int> openIds = roomSnapshot['openIds'].cast<int>();
+          final isVisible = openIds.length == 2;
+          return Padding(
+            padding: EdgeInsets.fromLTRB(0, 30.h, 0, 0),
+            child: Column(
+              children: [
+                Wrap(
+                  alignment: WrapAlignment.start,
+                  spacing: 8.h,
+                  children: panels(roomSnapshot),
+                ),
+                Visibility(
+                  child: checkButton(roomSnapshot),
+                  visible: isVisible,
+                ),
+                // Padding(
+                //   padding: EdgeInsets.all(8.r),
+                //   child: Container(
+                //     width: 70.w,
+                //     height: 30.h,
+                //     color: Colors.purple,
+                //     child: GestureDetector(
+                //       child: Center(
+                //         child: Text(
+                //           'return',
+                //           style:
+                //               TextStyle(fontSize: 20.sp, color: Colors.white),
+                //         ),
+                //       ),
+                //       onTap: () async {
+                //         await FirebaseFirestore.instance
+                //             .collection('room')
+                //             .doc(roomSnapshot.id)
+                //             .update({
+                //           'openIds': [],
+                //         });
+                //       },
+                //     ),
+                //   ),
+                // ),
+              ],
+            ),
           );
         },
       ),
@@ -35,16 +86,17 @@ class PlayPage extends StatelessWidget {
   }
 }
 
-List<Widget> panels(SettingViewModel model) {
+List<Widget> panels(QueryDocumentSnapshot<Object?> roomSnapshot) {
   var panelList = <Widget>[];
-  for (int i = 0; i < model.questionNum * 2; i++) {
-    panelList.add(eachPanel(model, i));
+  for (int i = 0; i < roomSnapshot['questionQuantity'] * 2; i++) {
+    panelList.add(eachPanel(roomSnapshot, i));
   }
   return panelList;
 }
 
-Widget eachPanel(SettingViewModel model, int id) {
-  if (model.visibleList[id] == false) {
+Widget eachPanel(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
+  List<int> openList = roomSnapshot['openIds'].cast<int>();
+  if (roomSnapshot['visibleList'][id] == false) {
     return Padding(
       padding: EdgeInsets.all(8.r),
       child: SizedBox(
@@ -53,21 +105,21 @@ Widget eachPanel(SettingViewModel model, int id) {
       ),
     );
   } else {
-    if (model.isBackList[id] == true) {
+    if (openList.contains(id)) {
       return Padding(
         padding: EdgeInsets.all(8.r),
-        child: back(model, id),
+        child: display(roomSnapshot, id),
       );
     } else {
       return Padding(
         padding: EdgeInsets.all(8.r),
-        child: display(model, id),
+        child: back(roomSnapshot, id),
       );
     }
   }
 }
 
-Widget display(SettingViewModel model, int id) {
+Widget display(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
   return SizedBox(
     width: 40.r,
     height: 40.r,
@@ -75,12 +127,13 @@ Widget display(SettingViewModel model, int id) {
       decoration: const BoxDecoration(
         color: Colors.amber,
       ),
-      child: Text(model.valueList[id].toString()),
+      child: Text(roomSnapshot['values'][id].toString()),
     ),
   );
 }
 
-Widget back(SettingViewModel model, int id) {
+Widget back(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
+  List<int> openIds = roomSnapshot['openIds'].cast<int>();
   return SizedBox(
     width: 40.r,
     height: 40.r,
@@ -90,24 +143,15 @@ Widget back(SettingViewModel model, int id) {
       ),
       child: GestureDetector(
         onTap: () async {
-          if (model.isCanTap == true) {
-            model.isBackList[id] = false;
-            model.openValues.add(model.valueList[id]);
-            model.openIds.add(id);
-            if (model.openValues.length >= 2) {
-              model.isCanTap = false;
-            }
-            final sendBackList = <String, dynamic>{
-              'id': id,
-              'openValues': model.openValues,
-              'openIds': model.openIds,
-            };
-            model.socket.emit('back2server', sendBackList);
-            model.isComplete = false;
-            while (model.isComplete == false) {
-              await Future.delayed(const Duration(milliseconds: 100));
-            }
-            model.notify();
+          final uid = FirebaseAuth.instance.currentUser!.uid;
+          if (roomSnapshot['turn'] == uid && openIds.length < 2) {
+            openIds.add(id);
+            await FirebaseFirestore.instance
+                .collection('room')
+                .doc(roomSnapshot.id)
+                .update({
+              'openIds': openIds,
+            });
           }
         },
       ),
@@ -115,37 +159,38 @@ Widget back(SettingViewModel model, int id) {
   );
 }
 
-Widget checkButton(SettingViewModel model) {
-  if (model.openValues.length >= 2) {
-    return Padding(
-      padding: EdgeInsets.all(8.r),
-      child: SizedBox(
-        height: 30.h,
-        width: 60.w,
-        child: DecoratedBox(
-          decoration: const BoxDecoration(
-            color: Colors.orange,
-          ),
-          child: GestureDetector(
-            child: const Text('OK'),
-            onTap: () async {
-              model.socket.emit('next2server', '');
-              model.isComplete = false;
-              while (model.isComplete == false) {
-                await Future.delayed(const Duration(milliseconds: 100));
-              }
-            },
-          ),
-        ),
+Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
+  return Padding(
+    padding: EdgeInsets.all(8.r),
+    child: Container(
+      height: 30.h,
+      width: 60.w,
+      color: Colors.purple,
+      child: GestureDetector(
+        child: const Text('OK'),
+        onTap: () async {
+          List<bool> visibleList = roomSnapshot['visibleList'].cast<bool>();
+          List<int> openIds = roomSnapshot['openIds'].cast<int>();
+          List<int> values = roomSnapshot['values'].cast<int>();
+          var turn = roomSnapshot['turn'];
+          if (values[openIds[0]] == values[openIds[1]]) {
+            visibleList[openIds[0]] = false;
+            visibleList[openIds[1]] = false;
+          } else {
+            List<String> members = roomSnapshot['members'].cast<String>();
+            var nextTurnIndex = (members.indexOf(turn) + 1) % members.length;
+            turn = members[nextTurnIndex];
+          }
+          await FirebaseFirestore.instance
+              .collection('room')
+              .doc(roomSnapshot.id)
+              .update({
+            'openIds': [],
+            'visibleList': visibleList,
+            'turn': turn,
+          });
+        },
       ),
-    );
-  } else {
-    return Padding(
-      padding: EdgeInsets.all(8.r),
-      child: SizedBox(
-        height: 30.h,
-        width: 60.w,
-      ),
-    );
-  }
+    ),
+  );
 }
