@@ -5,7 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/play_setting_view.dart';
 import 'package:memory_weakness/ui/play/play_page.dart';
 import 'package:memory_weakness/ui/room/createroom_page.dart';
-import 'package:go_router/go_router.dart';
+import 'package:memory_weakness/ui/room/standby_room_page.dart';
 import 'package:provider/provider.dart';
 
 class RoomPage extends StatelessWidget {
@@ -26,7 +26,7 @@ class RoomPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Column(children: roomCard(model, context)),
-                buildTaskList(),
+                buildTaskList(context),
                 SizedBox(
                   height: 30.h,
                   width: 100.w,
@@ -144,7 +144,7 @@ Widget panel(String name, SettingViewModel model, BuildContext context) {
   );
 }
 
-Widget buildTaskList() {
+Widget buildTaskList(BuildContext context) {
   return StreamBuilder<QuerySnapshot>(
     stream: FirebaseFirestore.instance.collection('room').snapshots(),
     builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -160,7 +160,7 @@ Widget buildTaskList() {
       return SizedBox(
         height: 400.h,
         child: ListView(
-          children: presenceViewList(roomSnapshotList),
+          children: presenceViewList(roomSnapshotList, context),
         ),
       );
     },
@@ -168,18 +168,26 @@ Widget buildTaskList() {
 }
 
 List<Widget> presenceViewList(
-    List<QueryDocumentSnapshot<Object?>> roomSnapshotList) {
+    List<QueryDocumentSnapshot<Object?>> roomSnapshotList,
+    BuildContext context) {
   var resultList = <Widget>[];
   for (int i = 0; i < roomSnapshotList.length; i++) {
-    resultList.add(presenceView(roomSnapshotList[i]));
+    final currentMemberQuantity = roomSnapshotList[i]['members'].length;
+    final maxMemberQuantity = roomSnapshotList[i]['maxMembers'];
+    if (currentMemberQuantity > 0 &&
+        currentMemberQuantity < maxMemberQuantity) {
+      resultList.add(presenceView(roomSnapshotList[i], context));
+    }
   }
   return resultList;
 }
 
-Widget presenceView(QueryDocumentSnapshot<Object?> roomSnapshot) {
+Widget presenceView(
+    QueryDocumentSnapshot<Object?> roomSnapshot, BuildContext context) {
   final maxMembers = roomSnapshot['maxMembers'].toString();
   final questionQuantity = roomSnapshot['questionQuantity'].toString();
-  return Card(
+  final memberList = roomSnapshot['members'] as List;
+  return InkWell(
     child: SizedBox(
       width: 200.w,
       height: 50.h,
@@ -188,5 +196,19 @@ Widget presenceView(QueryDocumentSnapshot<Object?> roomSnapshot) {
             'questionQuantity : $questionQuantity  maxMembers : $maxMembers'),
       ),
     ),
+    onTap: () async {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      memberList.add(uid);
+      final addedMemberList = memberList.toSet().toList();
+      await FirebaseFirestore.instance
+          .collection('room')
+          .doc(roomSnapshot.id)
+          .update({
+        'members': addedMemberList,
+      });
+      Navigator.of(context).push<dynamic>(
+        StandbyRoomPage.route(roomName: roomSnapshot.id),
+      );
+    },
   );
 }
