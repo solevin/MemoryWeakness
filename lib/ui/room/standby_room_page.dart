@@ -106,6 +106,11 @@ Widget buildTaskList(String roomName) {
       if (snapshot.hasError) {
         return const Text('Something went wrong');
       }
+      if (snapshot.connectionState != ConnectionState.done){
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
       final memberSnapshotList = snapshot.data!.docs;
       int roomIndex = 0;
       for (int i = 0; i < memberSnapshotList.length; i++) {
