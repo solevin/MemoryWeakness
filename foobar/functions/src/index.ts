@@ -8,6 +8,7 @@ type User = {
   isOnline: boolean;
   lastSeen: number;
   roomID: string;
+  name: string;
 };
 
 type Room = {
@@ -62,5 +63,6 @@ exports.onUserStatusChange = functions.database
         isOnline: isOnline,
         lastSeen: Date.now(),
         roomID: "",
+        name: "",
       });
     });

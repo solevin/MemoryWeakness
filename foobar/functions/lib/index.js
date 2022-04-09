@@ -45,6 +45,7 @@ exports.onUserStatusChange = functions.database
         isOnline: isOnline,
         lastSeen: Date.now(),
         roomID: "",
+        name: "",
     });
 });
 //# sourceMappingURL=index.js.map
