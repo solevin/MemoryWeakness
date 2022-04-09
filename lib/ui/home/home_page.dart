@@ -185,6 +185,8 @@ class HomePage extends StatelessWidget {
                                         await SharedPreferences.getInstance();
                                     preference.setBool(
                                         "isExperiencedStartUp", true);
+                                    preference.setString(
+                                        "userName", model.userName);
                                   },
                             style: ElevatedButton.styleFrom(
                               primary: Colors.yellow,
@@ -213,6 +215,7 @@ class HomePage extends StatelessWidget {
 
 Future<void> checkFirstStartUp(HomePageViewModel model) async {
   final preference = await SharedPreferences.getInstance();
+  // print(preference.getString("userName"));
   if (preference.getBool("isExperiencedStartUp") != true) {
     model.isStack = true;
     model.notify();

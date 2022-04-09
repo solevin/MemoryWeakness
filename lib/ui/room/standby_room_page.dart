@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/home/home_page.dart';
 import 'package:memory_weakness/ui/play/play_page.dart';
-import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StandbyRoomPage extends StatelessWidget {
   static Route<dynamic> route({
@@ -41,11 +41,18 @@ class StandbyRoomPage extends StatelessWidget {
                 roomSnapshotList[roomIndex]['members'].cast<String>();
             memberList.remove(uid);
             final deletedMemberList = memberList.toSet().toList();
+            final preference = await SharedPreferences.getInstance();
+            final userName = preference.getString("userName");
+            List<String> nameList =
+                roomSnapshotList[roomIndex]['names'].cast<String>();
+            nameList.remove(userName);
+            final deletedNameList = memberList.toSet().toList();
             await FirebaseFirestore.instance
                 .collection('room')
                 .doc(roomSnapshotList[roomIndex].id)
                 .update({
               'members': deletedMemberList,
+              'names': deletedNameList,
             });
             if (memberList.isEmpty) {
               await FirebaseFirestore.instance
@@ -74,7 +81,8 @@ class StandbyRoomPage extends StatelessWidget {
                       child: Center(
                         child: Text(
                           'start',
-                          style: TextStyle(fontSize: 20.sp, color: Colors.white),
+                          style:
+                              TextStyle(fontSize: 20.sp, color: Colors.white),
                         ),
                       ),
                     ),
@@ -106,26 +114,27 @@ Widget buildTaskList(String roomName) {
       if (snapshot.hasError) {
         return const Text('Something went wrong');
       }
-      if (snapshot.connectionState != ConnectionState.done){
+      try {
+        final memberSnapshotList = snapshot.data!.docs;
+        int roomIndex = 0;
+        for (int i = 0; i < memberSnapshotList.length; i++) {
+          if (memberSnapshotList[i].id == roomName) {
+            roomIndex = i;
+          }
+        }
+        final memberList =
+            memberSnapshotList[roomIndex]['names'].cast<String>();
+        return SizedBox(
+          height: 400.h,
+          child: ListView(
+            children: memberViewList(memberList),
+          ),
+        );
+      } catch (e) {
         return const Center(
           child: CircularProgressIndicator(),
         );
       }
-      final memberSnapshotList = snapshot.data!.docs;
-      int roomIndex = 0;
-      for (int i = 0; i < memberSnapshotList.length; i++) {
-        if (memberSnapshotList[i].id == roomName) {
-          roomIndex = i;
-        }
-      }
-      final memberList =
-          memberSnapshotList[roomIndex]['members'].cast<String>();
-      return SizedBox(
-        height: 400.h,
-        child: ListView(
-          children: memberViewList(memberList),
-        ),
-      );
     },
   );
 }
