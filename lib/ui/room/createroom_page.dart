@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/room/create_rooom_view.dart';
 import 'package:memory_weakness/ui/room/standby_room_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
 class CreateRoomPage extends StatelessWidget {
@@ -132,6 +133,8 @@ class CreateRoomPage extends StatelessWidget {
                       final valueLength = model.selectedQuestionQuantity;
                       final rand = math.Random();
                       var visibleList = [];
+                      final preference = await SharedPreferences.getInstance();
+                      final userName = preference.getString("userName");
                       for (int i = 0; i < valueLength; i++) {
                         valueList.add(i);
                         valueList.add(i);
@@ -149,12 +152,13 @@ class CreateRoomPage extends StatelessWidget {
                           .doc(uid)
                           .set({
                         'members': [uid],
+                        'names': [userName],
                         'maxMembers': model.selectedMemberQuantity,
                         'questionQuantity': model.selectedQuestionQuantity,
                         'values': valueList,
                         'openIds': [],
                         'visibleList': visibleList,
-                        'turn': uid,
+                        'turn': userName,
                       });
                       final roomSnapshot = await FirebaseFirestore.instance
                           .collection('room')

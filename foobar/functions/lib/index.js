@@ -19,6 +19,7 @@ exports.onUserStatusChange = functions.database
             const roomRef = firestore.doc(`room/${data.roomID}`);
             const room = (await roomRef.get()).data();
             const memberList = room.members;
+            const nameList = room.members;
             if (memberList.length > 1) {
                 const deleteIndex = memberList.indexOf(context.params.uid);
                 let turn = room.turn;
@@ -27,8 +28,10 @@ exports.onUserStatusChange = functions.database
                     turn = memberList[turnIndex];
                 }
                 memberList.splice(deleteIndex, 1);
+                nameList.splice(deleteIndex, 1);
                 roomRef.update({
                     members: memberList,
+                    name: nameList,
                     turn: turn,
                 });
             }
@@ -45,6 +48,7 @@ exports.onUserStatusChange = functions.database
         isOnline: isOnline,
         lastSeen: Date.now(),
         roomID: "",
+        name: "",
     });
 });
 //# sourceMappingURL=index.js.map

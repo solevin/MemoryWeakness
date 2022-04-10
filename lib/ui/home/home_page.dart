@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:memory_weakness/ui/room/room_list_page.dart';
+import 'package:memory_weakness/ui/home/home_page_view.dart';
+import 'package:memory_weakness/ui/setting/setting_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatelessWidget {
@@ -14,101 +19,211 @@ class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
+    final homePageModel = context.read<HomePageViewModel>();
+    WidgetsBinding.instance!
+        .addPostFrameCallback((_) => checkFirstStartUp(homePageModel));
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            InkWell(
-              child: Container(
-                width: 250.w,
-                height: 70.h,
-                padding: EdgeInsets.all(5.r),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(10.r),
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                InkWell(
+                  child: Container(
+                    width: 250.w,
+                    height: 70.h,
+                    padding: EdgeInsets.all(5.r),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Play',
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.of(context).push<dynamic>(
+                      RoomPage.route(),
+                    );
+                  },
                 ),
+                InkWell(
+                  child: Container(
+                    width: 250.w,
+                    height: 70.h,
+                    padding: EdgeInsets.all(5.r),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'View',
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onTap: () {},
+                ),
+                InkWell(
+                  child: Container(
+                    width: 250.w,
+                    height: 70.h,
+                    padding: EdgeInsets.all(5.r),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Setting',
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onTap: () async {
+                    final preference = await SharedPreferences.getInstance();
+                    Navigator.of(context).push<dynamic>(
+                      SettingPage.route(preference: preference),
+                    );
+                  },
+                ),
+                InkWell(
+                  child: Container(
+                    width: 250.w,
+                    height: 70.h,
+                    padding: EdgeInsets.all(5.r),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'HighScore',
+                        style: TextStyle(
+                          fontSize: 20.sp,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+          Consumer<HomePageViewModel>(
+            builder: (context, model, _) {
+              return Visibility(
+                visible: model.isStack,
                 child: Center(
-                  child: Text(
-                    'Play',
-                    style: TextStyle(
-                      fontSize: 20.sp,
+                  child: Container(
+                    height: 170.h,
+                    width: 320.w,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          spreadRadius: 0.8,
+                          blurRadius: 8.0,
+                          offset: Offset(10, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          'ユーザー名登録',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            color: Colors.black,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 60.h,
+                          width: 280.w,
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLength: 8,
+                            style: TextStyle(
+                              fontSize: 20.sp,
+                              color: Colors.black,
+                            ),
+                            onChanged: (text) {
+                              model.userName = text;
+                              model.notify();
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          height: 40.h,
+                          width: 100.w,
+                          child: ElevatedButton(
+                            onPressed: model.userName.isEmpty
+                                ? null
+                                : () async {
+                                    final uid =
+                                        FirebaseAuth.instance.currentUser!.uid;
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(uid)
+                                        .update({
+                                      'name': model.userName,
+                                    });
+                                    model.isStack = false;
+                                    model.notify();
+                                    final preference =
+                                        await SharedPreferences.getInstance();
+                                    preference.setBool(
+                                        "isExperiencedStartUp", true);
+                                    preference.setString(
+                                        "userName", model.userName);
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.yellow,
+                            ),
+                            child: Text(
+                              'OK',
+                              style: TextStyle(
+                                fontSize: 20.sp,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-              onTap: () {
-                Navigator.of(context).push<dynamic>(
-                  RoomPage.route(),
-                );
-              },
-            ),
-            InkWell(
-              child: Container(
-                width: 250.w,
-                height: 70.h,
-                padding: EdgeInsets.all(5.r),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Center(
-                  child: Text(
-                    'View',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                    ),
-                  ),
-                ),
-              ),
-              onTap: () {
-              },
-            ),
-            InkWell(
-              child: Container(
-                width: 250.w,
-                height: 70.h,
-                padding: EdgeInsets.all(5.r),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Center(
-                  child: Text(
-                    'Setting',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                    ),
-                  ),
-                ),
-              ),
-              onTap: () {
-              },
-            ),
-            InkWell(
-              child: Container(
-                width: 250.w,
-                height: 70.h,
-                padding: EdgeInsets.all(5.r),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(10.r),
-                ),
-                child: Center(
-                  child: Text(
-                    'HighScore',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                    ),
-                  ),
-                ),
-              ),
-              onTap: () {
-              },
-            ),
-          ],
-        ),
+              );
+            },
+          )
+        ],
       ),
     );
+  }
+}
+
+Future<void> checkFirstStartUp(HomePageViewModel model) async {
+  final preference = await SharedPreferences.getInstance();
+  // print(preference.getString("userName"));
+  if (preference.getBool("isExperiencedStartUp") != true) {
+    model.isStack = true;
+    model.notify();
   }
 }

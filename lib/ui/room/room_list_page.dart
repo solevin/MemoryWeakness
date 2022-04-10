@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/room/createroom_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:memory_weakness/ui/room/standby_room_page.dart';
 import 'package:provider/provider.dart';
 
@@ -80,6 +81,7 @@ Widget presenceView(
   final maxMembers = roomSnapshot['maxMembers'].toString();
   final questionQuantity = roomSnapshot['questionQuantity'].toString();
   final memberList = roomSnapshot['members'] as List;
+  final nameList = roomSnapshot['names'] as List;
   return InkWell(
     child: SizedBox(
       width: 200.w,
@@ -92,6 +94,9 @@ Widget presenceView(
     onTap: () async {
       final uid = FirebaseAuth.instance.currentUser!.uid;
       memberList.add(uid);
+      final preference = await SharedPreferences.getInstance();
+      final userName = preference.getString("userName");
+      nameList.add(userName);
       final addedMemberList = memberList.toSet().toList();
       await FirebaseFirestore.instance
           .collection('room')

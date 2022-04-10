@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayPage extends StatelessWidget {
   static Route<dynamic> route({
@@ -156,8 +157,9 @@ Widget back(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
       ),
       child: GestureDetector(
         onTap: () async {
-          final uid = FirebaseAuth.instance.currentUser!.uid;
-          if (roomSnapshot['turn'] == uid && openIds.length < 2) {
+          final preference = await SharedPreferences.getInstance();
+          final userName = preference.getString("userName");
+          if (roomSnapshot['turn'] == userName && openIds.length < 2) {
             openIds.add(id);
             await FirebaseFirestore.instance
                 .collection('room')
@@ -193,7 +195,7 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
             visibleList[openIds[0]] = false;
             visibleList[openIds[1]] = false;
           } else {
-            List<String> members = roomSnapshot['members'].cast<String>();
+            List<String> members = roomSnapshot['names'].cast<String>();
             var nextTurnIndex = (members.indexOf(turn) + 1) % members.length;
             turn = members[nextTurnIndex];
           }
