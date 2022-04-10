@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:memory_weakness/ui/room/room_list_page.dart';
 import 'package:memory_weakness/ui/home/home_page_view.dart';
+import 'package:memory_weakness/ui/setting/setting_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
@@ -18,9 +19,9 @@ class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final HomePageModel = context.read<HomePageViewModel>();
+    final homePageModel = context.read<HomePageViewModel>();
     WidgetsBinding.instance!
-        .addPostFrameCallback((_) => checkFirstStartUp(HomePageModel));
+        .addPostFrameCallback((_) => checkFirstStartUp(homePageModel));
     return Scaffold(
       body: Stack(
         children: [
@@ -90,7 +91,12 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  onTap: () {},
+                  onTap: () async {
+                    final preference = await SharedPreferences.getInstance();
+                    Navigator.of(context).push<dynamic>(
+                      SettingPage.route(preference: preference),
+                    );
+                  },
                 ),
                 InkWell(
                   child: Container(

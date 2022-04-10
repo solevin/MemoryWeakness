@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/home/home_page.dart';
 import 'package:memory_weakness/ui/home/home_page_view.dart';
 import 'package:memory_weakness/ui/room/create_rooom_view.dart';
+import 'package:memory_weakness/ui/setting/setting_page_view.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 
@@ -25,6 +26,9 @@ void main() async {
           ),
           provider.ChangeNotifierProvider(
             create: (_) => HomePageViewModel(),
+          ),
+          provider.ChangeNotifierProvider(
+            create: (_) => SettingPageViewModel(),
           ),
         ],
         child: ScreenUtilInit(
