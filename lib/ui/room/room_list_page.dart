@@ -82,6 +82,7 @@ Widget presenceView(
   final questionQuantity = roomSnapshot['questionQuantity'].toString();
   final memberList = roomSnapshot['members'] as List;
   final nameList = roomSnapshot['names'] as List;
+  final pointList = roomSnapshot['points'] as List;
   return InkWell(
     child: SizedBox(
       width: 200.w,
@@ -94,15 +95,21 @@ Widget presenceView(
     onTap: () async {
       final uid = FirebaseAuth.instance.currentUser!.uid;
       memberList.add(uid);
+      final addedMemberList = memberList.toSet().toList();
+
       final preference = await SharedPreferences.getInstance();
       final userName = preference.getString("userName");
       nameList.add(userName);
-      final addedMemberList = memberList.toSet().toList();
+      final addedNameList = nameList.toSet().toList();
+
+      pointList.add(0);
       await FirebaseFirestore.instance
           .collection('room')
           .doc(roomSnapshot.id)
           .update({
         'members': addedMemberList,
+        'names': addedNameList,
+        'points': pointList,
       });
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'roomID': roomSnapshot.id,

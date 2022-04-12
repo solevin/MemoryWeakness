@@ -65,31 +65,11 @@ class PlayPage extends StatelessWidget {
                     child: checkButton(roomSnapshot),
                     visible: isVisible,
                   ),
-                  // Padding(
-                  //   padding: EdgeInsets.all(8.r),
-                  //   child: Container(
-                  //     width: 70.w,
-                  //     height: 30.h,
-                  //     color: Colors.purple,
-                  //     child: GestureDetector(
-                  //       child: Center(
-                  //         child: Text(
-                  //           'return',
-                  //           style:
-                  //               TextStyle(fontSize: 20.sp, color: Colors.white),
-                  //         ),
-                  //       ),
-                  //       onTap: () async {
-                  //         await FirebaseFirestore.instance
-                  //             .collection('room')
-                  //             .doc(roomSnapshot.id)
-                  //             .update({
-                  //           'openIds': [],
-                  //         });
-                  //       },
-                  //     ),
-                  //   ),
-                  // ),
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8.h,
+                    children: scores(roomSnapshot),
+                  ),
                 ],
               ),
             );
@@ -190,19 +170,32 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
           List<bool> visibleList = roomSnapshot['visibleList'].cast<bool>();
           List<int> openIds = roomSnapshot['openIds'].cast<int>();
           List<int> values = roomSnapshot['values'].cast<int>();
+          List<int> points = roomSnapshot['points'].cast<int>();
+          List<String> leaves = roomSnapshot['leaves'].cast<String>();
+          List<String> names = roomSnapshot['names'].cast<String>();
+          List<String> members = roomSnapshot['members'].cast<String>();
           var turn = roomSnapshot['turn'];
           if (values[openIds[0]] == values[openIds[1]]) {
+            print('aa');
             visibleList[openIds[0]] = false;
             visibleList[openIds[1]] = false;
+            final playerIndex = names.indexOf(turn);
+            final addedPoint = points[playerIndex] + 1;
+            points[playerIndex] = addedPoint;
           } else {
-            List<String> members = roomSnapshot['names'].cast<String>();
-            var nextTurnIndex = (members.indexOf(turn) + 1) % members.length;
-            turn = members[nextTurnIndex];
+              var nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
+              turn = names[nextTurnIndex];
+              print(turn);
+            while (leaves.contains(members[names.indexOf(turn)])) {
+              nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
+              turn = names[nextTurnIndex];
+            }
           }
           await FirebaseFirestore.instance
               .collection('room')
               .doc(roomSnapshot.id)
               .update({
+            'points': points,
             'openIds': [],
             'visibleList': visibleList,
             'turn': turn,
@@ -210,5 +203,27 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
         },
       ),
     ),
+  );
+}
+
+List<Widget> scores(QueryDocumentSnapshot<Object?> roomSnapshot) {
+  var scoreList = <Widget>[];
+  for (int i = 0; i < roomSnapshot['members'].length; i++) {
+    scoreList.add(eachScore(roomSnapshot, i));
+  }
+  return scoreList;
+}
+
+Widget eachScore(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
+  final name = roomSnapshot['names'][id];
+  final point = roomSnapshot['points'][id];
+  final leaves = roomSnapshot['leaves'].cast<String>();
+  final uid = roomSnapshot['members'][id];
+  final isLeaved = leaves.indexOf(uid) >= 0;
+
+  return Text(
+    '$name : $point',
+    style: TextStyle(
+        fontSize: 20.sp, color: isLeaved ? Colors.grey : Colors.black),
   );
 }
