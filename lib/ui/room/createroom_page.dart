@@ -153,6 +153,8 @@ class CreateRoomPage extends StatelessWidget {
                           .set({
                         'members': [uid],
                         'names': [userName],
+                        'points': [0],
+                        'leaves': [],
                         'maxMembers': model.selectedMemberQuantity,
                         'questionQuantity': model.selectedQuestionQuantity,
                         'values': valueList,

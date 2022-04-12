@@ -19,20 +19,28 @@ exports.onUserStatusChange = functions.database
             const roomRef = firestore.doc(`room/${data.roomID}`);
             const room = (await roomRef.get()).data();
             const memberList = room.members;
-            const nameList = room.members;
-            if (memberList.length > 1) {
-                const deleteIndex = memberList.indexOf(context.params.uid);
+            const nameList = room.names;
+            const leaveList = room.leaves;
+            if (memberList.length > leaveList.length) {
+                const leaveIndex = memberList.indexOf(context.params.uid);
+                leaveList.push(memberList[leaveIndex]);
                 let turn = room.turn;
-                if (room.turn == context.params.uid) {
-                    const turnIndex = (deleteIndex + 1) % memberList.length;
-                    turn = memberList[turnIndex];
+                if (turn == nameList[leaveIndex]) {
+                    let turnIndex = (leaveIndex + 1) % memberList.length;
+                    let turnId = memberList[nameList.indexOf(turn)];
+                    turn = nameList[turnIndex];
+                    console.log("in");
+                    console.log(`${leaveList}`);
+                    while (leaveList.indexOf(turnId) > 0) {
+                        console.log("while");
+                        turnIndex = (turnIndex + 1) % memberList.length;
+                        turn = nameList[turnIndex];
+                        turnId = memberList[nameList.indexOf(turn)];
+                    }
                 }
-                memberList.splice(deleteIndex, 1);
-                nameList.splice(deleteIndex, 1);
                 roomRef.update({
-                    members: memberList,
-                    name: nameList,
                     turn: turn,
+                    leaves: leaveList,
                 });
             }
             else {
