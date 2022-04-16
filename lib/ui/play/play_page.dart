@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:memory_weakness/ui/play/result_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayPage extends StatelessWidget {
@@ -17,7 +17,7 @@ class PlayPage extends StatelessWidget {
   const PlayPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final roomName = ModalRoute.of(context)!.settings.arguments;
+    final roomName = ModalRoute.of(context)!.settings.arguments as String;
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
@@ -43,6 +43,17 @@ class PlayPage extends StatelessWidget {
             List<int> openIds = roomSnapshot['openIds'].cast<int>();
             final isVisible = openIds.length == 2;
             final turnText = roomSnapshot['turn'] + 'のターン';
+            List<bool> visibleList = roomSnapshot['visibleList'].cast<bool>();
+
+            if (!visibleList.contains(true)) {
+              WidgetsBinding.instance!.addPostFrameCallback(
+                (_) => Navigator.of(context).pushAndRemoveUntil<dynamic>(
+                  ResultPage.route(roomName: roomName),
+                  (_) => false,
+                ),
+              );
+            }
+
             return Padding(
               padding: EdgeInsets.fromLTRB(0, 30.h, 0, 0),
               child: Column(
@@ -62,7 +73,7 @@ class PlayPage extends StatelessWidget {
                     children: panels(roomSnapshot),
                   ),
                   Visibility(
-                    child: checkButton(roomSnapshot),
+                    child: checkButton(roomSnapshot, context, roomName),
                     visible: isVisible,
                   ),
                   Wrap(
@@ -154,7 +165,8 @@ Widget back(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
   );
 }
 
-Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
+Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot,
+    BuildContext context, String roomName) {
   return Padding(
     padding: EdgeInsets.all(8.r),
     child: Container(
@@ -176,16 +188,14 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
           List<String> members = roomSnapshot['members'].cast<String>();
           var turn = roomSnapshot['turn'];
           if (values[openIds[0]] == values[openIds[1]]) {
-            print('aa');
             visibleList[openIds[0]] = false;
             visibleList[openIds[1]] = false;
             final playerIndex = names.indexOf(turn);
             final addedPoint = points[playerIndex] + 1;
             points[playerIndex] = addedPoint;
           } else {
-              var nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
-              turn = names[nextTurnIndex];
-              print(turn);
+            var nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
+            turn = names[nextTurnIndex];
             while (leaves.contains(members[names.indexOf(turn)])) {
               nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
               turn = names[nextTurnIndex];
@@ -200,6 +210,11 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot) {
             'visibleList': visibleList,
             'turn': turn,
           });
+          // if (!visibleList.contains(true)) {
+          //   Navigator.of(context).push<dynamic>(
+          //     ResultPage.route(roomName: roomName),
+          //   );
+          // }
         },
       ),
     ),
