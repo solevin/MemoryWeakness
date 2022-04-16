@@ -128,6 +128,22 @@ class CreateRoomPage extends StatelessWidget {
                       ),
                     ),
                     onTap: () async {
+                      final roomQuerySnapshot = await FirebaseFirestore.instance
+                          .collection('room')
+                          .get();
+                      final roomSnapshotList = roomQuerySnapshot.docs;
+                      var roomName = '0';
+                      var roomNameList = [];
+                      if(roomSnapshotList.isNotEmpty){
+                        for(int i = 0; i < roomSnapshotList.length; i++){
+                          roomNameList.add(roomSnapshotList[i].id);
+                        }
+                        for(int i = 0; i < roomNameList.length; i++){
+                          if(!roomNameList.contains(i.toString())){
+                            roomName = i.toString();
+                          }
+                        }
+                      }
                       final uid = FirebaseAuth.instance.currentUser!.uid;
                       var valueList = [];
                       final valueLength = model.selectedQuestionQuantity;
@@ -149,7 +165,7 @@ class CreateRoomPage extends StatelessWidget {
                       }
                       await FirebaseFirestore.instance
                           .collection('room')
-                          .doc(uid)
+                          .doc(roomName)
                           .set({
                         'members': [uid],
                         'names': [userName],
@@ -169,7 +185,7 @@ class CreateRoomPage extends StatelessWidget {
                           .collection('users')
                           .doc(uid)
                           .update({
-                        'roomID': uid,
+                        'roomID': roomName,
                       });
                       Navigator.of(context).push<dynamic>(
                         StandbyRoomPage.route(

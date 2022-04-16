@@ -20,57 +20,14 @@ class ResultPage extends StatelessWidget {
   const ResultPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    final roomName = ModalRoute.of(context)!.settings.arguments;
+    final roomName = ModalRoute.of(context)!.settings.arguments as String;
+    WidgetsBinding.instance!
+        .addPostFrameCallback((_) => initResultPage(roomName));
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () async {
-              final roomQuerySnapshot =
-                  await FirebaseFirestore.instance.collection('room').get();
-              final roomSnapshotList = roomQuerySnapshot.docs;
-              int roomIndex = 0;
-              for (int i = 0; i < roomSnapshotList.length; i++) {
-                if (roomSnapshotList[i].id == roomName) {
-                  roomIndex = i;
-                }
-              }
-              final uid = FirebaseAuth.instance.currentUser!.uid;
-              List<String> memberList;
-              try {
-                memberList =
-                    roomSnapshotList[roomIndex]['members'].cast<String>();
-              } catch (e) {
-                memberList = [];
-              }
-              memberList.remove(uid);
-              final deletedMemberList = memberList.toSet().toList();
-              final preference = await SharedPreferences.getInstance();
-              final userName = preference.getString("userName");
-              List<String> nameList =
-                  roomSnapshotList[roomIndex]['names'].cast<String>();
-              nameList.remove(userName);
-              final deletedNameList = memberList.toSet().toList();
-              await FirebaseFirestore.instance
-                  .collection('room')
-                  .doc(roomSnapshotList[roomIndex].id)
-                  .update({
-                'members': deletedMemberList,
-                'names': deletedNameList,
-              });
-              if (memberList.isEmpty) {
-                await FirebaseFirestore.instance
-                    .collection('room')
-                    .doc(roomSnapshotList[roomIndex].id)
-                    .delete();
-              }
-              Navigator.of(context).push<dynamic>(
-                HomePage.route(),
-              );
-            },
-          ),
+          title: const Text('RESULT'),
         ),
         body: Center(
           child: StreamBuilder<QuerySnapshot>(
@@ -102,6 +59,22 @@ class ResultPage extends StatelessWidget {
                           children: ranking(roomSnapshot),
                         ),
                       ),
+                      Container(
+                        height: 30.h,
+                        width: 80.w,
+                        color: Colors.amber,
+                        child: GestureDetector(
+                          onTap: (() async {
+                            await backHome(roomName, context);
+                          }),
+                          child: Center(
+                              child: Text(
+                            'HOME',
+                            style:
+                                TextStyle(fontSize: 20.sp, color: Colors.black),
+                          )),
+                        ),
+                      )
                     ],
                   ),
                 );
@@ -133,10 +106,78 @@ List<Widget> ranking(QueryDocumentSnapshot<Object?> roomSnapshot) {
 }
 
 Widget displayRank(int rank, String userName, int point) {
-  return Center(
-    child: Text(
-      '$rank. $userName : $point',
-      style: TextStyle(fontSize: 20.sp, color: Colors.black),
+  return Padding(
+    padding: EdgeInsets.all(8.r),
+    child: Center(
+      child: Text(
+        '$rank. $userName : $point',
+        style: TextStyle(fontSize: 20.sp, color: Colors.black),
+      ),
     ),
   );
+}
+
+Future<void> backHome(String roomName, BuildContext context) async {
+  final roomQuerySnapshot =
+      await FirebaseFirestore.instance.collection('room').get();
+  final roomSnapshotList = roomQuerySnapshot.docs;
+  int roomIndex = 0;
+  for (int i = 0; i < roomSnapshotList.length; i++) {
+    if (roomSnapshotList[i].id == roomName) {
+      roomIndex = i;
+    }
+  }
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  List<String> memberList;
+  memberList = roomSnapshotList[roomIndex]['members'].cast<String>();
+  memberList.remove(uid);
+  final deletedMemberList = memberList.toSet().toList();
+  final preference = await SharedPreferences.getInstance();
+  final userName = preference.getString("userName");
+  List<String> nameList = roomSnapshotList[roomIndex]['names'].cast<String>();
+  nameList.remove(userName);
+  final deletedNameList = memberList.toSet().toList();
+  await FirebaseFirestore.instance
+      .collection('room')
+      .doc(roomSnapshotList[roomIndex].id)
+      .update({
+    'members': deletedMemberList,
+    'names': deletedNameList,
+  });
+  await FirebaseFirestore.instance
+      .collection('users')
+      .doc(uid)
+      .update({
+    'roomID': "",
+  });
+  if (memberList.isEmpty) {
+    await FirebaseFirestore.instance
+        .collection('room')
+        .doc(roomSnapshotList[roomIndex].id)
+        .delete();
+  }
+  Navigator.of(context).push<dynamic>(
+    HomePage.route(),
+  );
+}
+
+Future<void> initResultPage(String roomName) async {
+  final roomQuerySnapshot =
+      await FirebaseFirestore.instance.collection('room').get();
+  final roomSnapshotList = roomQuerySnapshot.docs;
+  int roomIndex = 0;
+  for (int i = 0; i < roomSnapshotList.length; i++) {
+    if (roomSnapshotList[i].id == roomName) {
+      roomIndex = i;
+    }
+  }
+  final roomSnapshot = roomSnapshotList[roomIndex];
+
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+}
+
+class RoomState{
+  List<String>? members;
+  List<String>? names;
+  List<int>? points;
 }

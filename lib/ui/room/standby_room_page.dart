@@ -54,12 +54,18 @@ class StandbyRoomPage extends StatelessWidget {
               'members': deletedMemberList,
               'names': deletedNameList,
             });
-            if (memberList.isEmpty) {
-              await FirebaseFirestore.instance
-                  .collection('room')
-                  .doc(roomSnapshotList[roomIndex].id)
-                  .delete();
-            }
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(uid)
+                .update({
+              'roomID': "",
+            });
+            // if (memberList.isEmpty) {
+            //   await FirebaseFirestore.instance
+            //       .collection('room')
+            //       .doc(roomSnapshotList[roomIndex].id)
+            //       .delete();
+            // }
             Navigator.of(context).push<dynamic>(
               HomePage.route(),
             );
