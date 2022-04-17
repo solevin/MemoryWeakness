@@ -3,9 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:memory_weakness/ui/room/create_room_page.dart';
+import 'package:memory_weakness/ui/room/standby_room_page.dart';
 import 'package:memory_weakness/ui/home/home_page.dart';
-import 'package:memory_weakness/ui/play/play_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:memory_weakness/ui/play/result_page_view.dart';
+import 'package:memory_weakness/ui/room/room_list_page.dart';
+import 'package:provider/provider.dart';
 
 class ResultPage extends StatelessWidget {
   static Route<dynamic> route({
@@ -21,8 +24,12 @@ class ResultPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roomName = ModalRoute.of(context)!.settings.arguments as String;
-    WidgetsBinding.instance!
-        .addPostFrameCallback((_) => initResultPage(roomName));
+    late RoomState roomState;
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      roomState = await initResultPage(roomName);
+      context.read<ResultPageViewModel>().isInitialized = true;
+      context.read<ResultPageViewModel>().notify();
+    });
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
@@ -30,60 +37,59 @@ class ResultPage extends StatelessWidget {
           title: const Text('RESULT'),
         ),
         body: Center(
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('room').snapshots(),
-            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-              if (snapshot.hasError) {
-                return const Text('Something went wrong');
-              }
-              try {
-                final roomSnapshotList = snapshot.data!.docs;
-                int roomIndex = 0;
-                for (int i = 0; i < roomSnapshotList.length; i++) {
-                  if (roomSnapshotList[i].id == roomName) {
-                    roomIndex = i;
-                  }
-                }
-                final roomSnapshot = roomSnapshotList[roomIndex];
-                return Center(
-                  child: Column(
-                    children: [
-                      SizedBox(
+          child: Center(
+            child: Column(
+              children: [
+                Consumer<ResultPageViewModel>(
+                  builder: (context, model, _) {
+                    try {
+                      return SizedBox(
                         height: 200.h,
-                        child: ListView(
-                          children: ranking(roomSnapshot),
-                        ),
-                      ),
-                      Container(
-                        height: 30.h,
-                        width: 80.w,
-                        color: Colors.amber,
-                        child: GestureDetector(
-                          onTap: (() async {
-                            await backHome(roomName, context);
-                          }),
-                          child: Center(
-                              child: Text(
-                            'HOME',
-                            style:
-                                TextStyle(fontSize: 20.sp, color: Colors.black),
-                          )),
-                        ),
-                      )
-                    ],
+                        child: ListView(children: ranking(roomState)),
+                      );
+                    } catch (e) {
+                      return const CircularProgressIndicator();
+                    }
+                  },
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.r),
+                  child: Container(
+                    height: 30.h,
+                    width: 80.w,
+                    color: Colors.amber,
+                    child: GestureDetector(
+                      onTap: (() async {
+                        replay(roomState, context);
+                      }),
+                      child: Center(
+                          child: Text(
+                        'REPLAY',
+                        style: TextStyle(fontSize: 20.sp, color: Colors.black),
+                      )),
+                    ),
                   ),
-                );
-              } catch (e) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-            },
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8.r),
+                  child: Container(
+                    height: 30.h,
+                    width: 80.w,
+                    color: Colors.amber,
+                    child: GestureDetector(
+                      onTap: (() async {
+                        await backHome(roomState, context);
+                      }),
+                      child: Center(
+                          child: Text(
+                        'HOME',
+                        style: TextStyle(fontSize: 20.sp, color: Colors.black),
+                      )),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -91,12 +97,12 @@ class ResultPage extends StatelessWidget {
   }
 }
 
-List<Widget> ranking(QueryDocumentSnapshot<Object?> roomSnapshot) {
+List<Widget> ranking(RoomState roomState) {
   List<Widget> ranks = [];
-  int memberQuantity = roomSnapshot['members'].length;
-  List<int> immutablePoints = roomSnapshot['points'].cast<int>();
-  List<int> variablePoints = roomSnapshot['points'].cast<int>();
-  final names = roomSnapshot['names'];
+  int memberQuantity = roomState.members.length;
+  List<int> immutablePoints = roomState.points;
+  List<int> variablePoints = roomState.points;
+  final names = roomState.names;
   for (int i = 0; i < memberQuantity; i++) {
     final maxValue = variablePoints.reduce(max);
     final tmpIndex = immutablePoints.indexOf(maxValue);
@@ -117,51 +123,32 @@ Widget displayRank(int rank, String userName, int point) {
   );
 }
 
-Future<void> backHome(String roomName, BuildContext context) async {
-  final roomQuerySnapshot =
-      await FirebaseFirestore.instance.collection('room').get();
-  final roomSnapshotList = roomQuerySnapshot.docs;
-  int roomIndex = 0;
-  for (int i = 0; i < roomSnapshotList.length; i++) {
-    if (roomSnapshotList[i].id == roomName) {
-      roomIndex = i;
-    }
-  }
+Future<void> backHome(RoomState roomState, BuildContext context) async {
   final uid = FirebaseAuth.instance.currentUser!.uid;
-  List<String> memberList;
-  memberList = roomSnapshotList[roomIndex]['members'].cast<String>();
-  memberList.remove(uid);
-  final deletedMemberList = memberList.toSet().toList();
-  final preference = await SharedPreferences.getInstance();
-  final userName = preference.getString("userName");
-  List<String> nameList = roomSnapshotList[roomIndex]['names'].cast<String>();
-  nameList.remove(userName);
-  final deletedNameList = memberList.toSet().toList();
-  await FirebaseFirestore.instance
-      .collection('room')
-      .doc(roomSnapshotList[roomIndex].id)
-      .update({
-    'members': deletedMemberList,
-    'names': deletedNameList,
-  });
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(uid)
-      .update({
-    'roomID': "",
-  });
-  if (memberList.isEmpty) {
+  List<String> leaveList = roomState.leaves;
+  leaveList.add(uid);
+  if (leaveList.length == roomState.members.length) {
     await FirebaseFirestore.instance
         .collection('room')
-        .doc(roomSnapshotList[roomIndex].id)
+        .doc(roomState.roomName)
         .delete();
+  } else {
+    await FirebaseFirestore.instance
+        .collection('room')
+        .doc(roomState.roomName)
+        .update({
+      'leaves': leaveList,
+    });
   }
+  await FirebaseFirestore.instance.collection('users').doc(uid).update({
+    'roomID': "",
+  });
   Navigator.of(context).push<dynamic>(
     HomePage.route(),
   );
 }
 
-Future<void> initResultPage(String roomName) async {
+Future<RoomState> initResultPage(String roomName) async {
   final roomQuerySnapshot =
       await FirebaseFirestore.instance.collection('room').get();
   final roomSnapshotList = roomQuerySnapshot.docs;
@@ -172,12 +159,59 @@ Future<void> initResultPage(String roomName) async {
     }
   }
   final roomSnapshot = roomSnapshotList[roomIndex];
-
-  final uid = FirebaseAuth.instance.currentUser!.uid;
+  final roomState = RoomState(
+    roomName,
+    roomSnapshot['members'].cast<String>(),
+    roomSnapshot['names'].cast<String>(),
+    roomSnapshot['points'].cast<int>(),
+    roomSnapshot['leaves'].cast<String>(),
+    roomSnapshot['maxMembers'],
+    roomSnapshot['questionQuantity'],
+  );
+  return roomState;
 }
 
-class RoomState{
-  List<String>? members;
-  List<String>? names;
-  List<int>? points;
+Future<void> replay(RoomState roomState, BuildContext context) async {
+  final roomQuerySnapshot =
+      await FirebaseFirestore.instance.collection('room').get();
+  final newRoomName = roomState.roomName + '+';
+  final roomSnapshotList = roomQuerySnapshot.docs;
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  List<String> leaveList = roomState.leaves;
+  leaveList.add(uid);
+  if (leaveList.length == roomState.members.length) {
+    await FirebaseFirestore.instance
+        .collection('room')
+        .doc(roomState.roomName)
+        .delete();
+  } else {
+    await FirebaseFirestore.instance
+        .collection('room')
+        .doc(roomState.roomName)
+        .update({
+      'leaves': leaveList,
+    });
+  }
+  for (int i = 0; i < roomSnapshotList.length; i++) {
+    if (newRoomName == roomSnapshotList[i].id) {
+      joinRoom(roomState.members, roomState.names, roomState.points,
+          newRoomName, context);
+    }
+  }
+  createRoom(roomState.questionQuantity, roomState.maxMembers, newRoomName);
+  Navigator.of(context).push<dynamic>(
+    StandbyRoomPage.route(roomName: newRoomName),
+  );
+}
+
+class RoomState {
+  String roomName;
+  List<String> members;
+  List<String> names;
+  List<int> points;
+  List<String> leaves;
+  int maxMembers;
+  int questionQuantity;
+  RoomState(this.roomName, this.members, this.names, this.points, this.leaves,
+      this.maxMembers, this.questionQuantity);
 }

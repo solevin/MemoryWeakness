@@ -18,6 +18,7 @@ class PlayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roomName = ModalRoute.of(context)!.settings.arguments as String;
+    var isFinished = false;
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
@@ -45,7 +46,8 @@ class PlayPage extends StatelessWidget {
             final turnText = roomSnapshot['turn'] + 'のターン';
             List<bool> visibleList = roomSnapshot['visibleList'].cast<bool>();
 
-            if (!visibleList.contains(true)) {
+            if (!visibleList.contains(true) && !isFinished) {
+              isFinished = true;
               WidgetsBinding.instance!.addPostFrameCallback(
                 (_) => Navigator.of(context).pushAndRemoveUntil<dynamic>(
                   ResultPage.route(roomName: roomName),
