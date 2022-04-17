@@ -60,10 +60,14 @@ exports.onUserStatusChange = functions.database
                 turnId = memberList[nameList.indexOf(turn)];
               }
             }
-            roomRef.update({
-              turn: turn,
-              leaves: leaveList,
-            });
+            if (memberList.length > leaveList.length) {
+              roomRef.update({
+                turn: turn,
+                leaves: leaveList,
+              });
+            } else {
+              roomRef.delete();
+            }
           } else {
             roomRef.delete();
           }

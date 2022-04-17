@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:memory_weakness/ui/room/createroom_page.dart';
+import 'package:memory_weakness/ui/room/create_room_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:memory_weakness/ui/room/standby_room_page.dart';
 import 'package:provider/provider.dart';
@@ -80,9 +80,10 @@ Widget presenceView(
     QueryDocumentSnapshot<Object?> roomSnapshot, BuildContext context) {
   final maxMembers = roomSnapshot['maxMembers'].toString();
   final questionQuantity = roomSnapshot['questionQuantity'].toString();
-  final memberList = roomSnapshot['members'] as List;
-  final nameList = roomSnapshot['names'] as List;
-  final pointList = roomSnapshot['points'] as List;
+  final memberList = roomSnapshot['members'].cast<String>();
+  final nameList = roomSnapshot['names'].cast<String>();
+  final pointList = roomSnapshot['points'].cast<int>();
+  final roomName = roomSnapshot.id;
   return InkWell(
     child: SizedBox(
       width: 200.w,
@@ -93,30 +94,32 @@ Widget presenceView(
       ),
     ),
     onTap: () async {
-      final uid = FirebaseAuth.instance.currentUser!.uid;
-      memberList.add(uid);
-      final addedMemberList = memberList.toSet().toList();
-
-      final preference = await SharedPreferences.getInstance();
-      final userName = preference.getString("userName");
-      nameList.add(userName);
-      final addedNameList = nameList.toSet().toList();
-
-      pointList.add(0);
-      await FirebaseFirestore.instance
-          .collection('room')
-          .doc(roomSnapshot.id)
-          .update({
-        'members': addedMemberList,
-        'names': addedNameList,
-        'points': pointList,
-      });
-      await FirebaseFirestore.instance.collection('users').doc(uid).update({
-        'roomID': roomSnapshot.id,
-      });
-      Navigator.of(context).push<dynamic>(
-        StandbyRoomPage.route(roomName: roomSnapshot.id),
-      );
+      joinRoom(memberList, nameList, pointList, roomName, context);
     },
+  );
+}
+
+Future<void> joinRoom(List<String> memberList, List<String> nameList,
+    List<int> pointList, String roomName, BuildContext context) async {
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  memberList.add(uid);
+  final addedMemberList = memberList.toSet().toList();
+
+  final preference = await SharedPreferences.getInstance();
+  final userName = preference.getString("userName");
+  nameList.add(userName!);
+  final addedNameList = nameList.toSet().toList();
+
+  pointList.add(0);
+  await FirebaseFirestore.instance.collection('room').doc(roomName).update({
+    'members': addedMemberList,
+    'names': addedNameList,
+    'points': pointList,
+  });
+  await FirebaseFirestore.instance.collection('users').doc(uid).update({
+    'roomID': roomName,
+  });
+  Navigator.of(context).push<dynamic>(
+    StandbyRoomPage.route(roomName: roomName),
   );
 }

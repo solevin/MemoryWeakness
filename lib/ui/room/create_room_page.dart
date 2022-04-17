@@ -128,52 +128,11 @@ class CreateRoomPage extends StatelessWidget {
                       ),
                     ),
                     onTap: () async {
-                      final uid = FirebaseAuth.instance.currentUser!.uid;
-                      var valueList = [];
-                      final valueLength = model.selectedQuestionQuantity;
-                      final rand = math.Random();
-                      var visibleList = [];
-                      final preference = await SharedPreferences.getInstance();
-                      final userName = preference.getString("userName");
-                      for (int i = 0; i < valueLength; i++) {
-                        valueList.add(i);
-                        valueList.add(i);
-                        visibleList.add(true);
-                        visibleList.add(true);
-                      }
-                      for (var i = valueLength * 2 - 1; i > 0; i--) {
-                        final n = rand.nextInt(i);
-                        final temp = valueList[i];
-                        valueList[i] = valueList[n];
-                        valueList[n] = temp;
-                      }
-                      await FirebaseFirestore.instance
-                          .collection('room')
-                          .doc(uid)
-                          .set({
-                        'members': [uid],
-                        'names': [userName],
-                        'points': [0],
-                        'leaves': [],
-                        'maxMembers': model.selectedMemberQuantity,
-                        'questionQuantity': model.selectedQuestionQuantity,
-                        'values': valueList,
-                        'openIds': [],
-                        'visibleList': visibleList,
-                        'turn': userName,
-                      });
-                      final roomSnapshot = await FirebaseFirestore.instance
-                          .collection('room')
-                          .get();
-                      await FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(uid)
-                          .update({
-                        'roomID': uid,
-                      });
+                      final roomName = await nameNewRoom();
+                      await createRoom(model.selectedQuestionQuantity,
+                          model.selectedMemberQuantity, roomName);
                       Navigator.of(context).push<dynamic>(
-                        StandbyRoomPage.route(
-                            roomName: roomSnapshot.docs[0].id),
+                        StandbyRoomPage.route(roomName: roomName),
                       );
                     },
                   ),
@@ -265,4 +224,64 @@ List<List<DropdownMenuItem<int>>> setItems() {
       ),
     );
   return [_questionQuantity, _memberQuantity];
+}
+
+Future<String> nameNewRoom() async {
+  final roomQuerySnapshot =
+      await FirebaseFirestore.instance.collection('room').get();
+  final roomSnapshotList = roomQuerySnapshot.docs;
+  var roomName = '0';
+  var roomNameList = [];
+  if (roomSnapshotList.isNotEmpty) {
+    for (int i = 0; i < roomSnapshotList.length; i++) {
+      roomNameList.add(roomSnapshotList[i].id);
+    }
+    for (int i = 0; i < roomNameList.length; i++) {
+      if (!roomNameList.contains(i.toString())) {
+        roomName = i.toString();
+      }
+    }
+  }
+  return roomName;
+}
+
+Future<void> createRoom(
+    int questionQuantity, int memberQuantity, String roomName) async {
+  final roomQuerySnapshot =
+      await FirebaseFirestore.instance.collection('room').get();
+  final roomSnapshotList = roomQuerySnapshot.docs;
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  var valueList = [];
+  final valueLength = questionQuantity;
+  final rand = math.Random();
+  var visibleList = [];
+  final preference = await SharedPreferences.getInstance();
+  final userName = preference.getString("userName");
+  for (int i = 0; i < valueLength; i++) {
+    valueList.add(i);
+    valueList.add(i);
+    visibleList.add(true);
+    visibleList.add(true);
+  }
+  for (var i = valueLength * 2 - 1; i > 0; i--) {
+    final n = rand.nextInt(i);
+    final temp = valueList[i];
+    valueList[i] = valueList[n];
+    valueList[n] = temp;
+  }
+  await FirebaseFirestore.instance.collection('room').doc(roomName).set({
+    'members': [uid],
+    'names': [userName],
+    'points': [0],
+    'leaves': [],
+    'maxMembers': memberQuantity,
+    'questionQuantity': valueLength,
+    'values': valueList,
+    'openIds': [],
+    'visibleList': visibleList,
+    'turn': userName,
+  });
+  await FirebaseFirestore.instance.collection('users').doc(uid).update({
+    'roomID': roomName,
+  });
 }
