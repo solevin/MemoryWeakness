@@ -273,6 +273,7 @@ Future<void> createRoom(
     'members': [uid],
     'names': [userName],
     'points': [0],
+    'standbyList': [false],
     'leaves': [],
     'maxMembers': memberQuantity,
     'questionQuantity': valueLength,
@@ -280,6 +281,7 @@ Future<void> createRoom(
     'openIds': [],
     'visibleList': visibleList,
     'turn': userName,
+    'isDisplay': true,
   });
   await FirebaseFirestore.instance.collection('users').doc(uid).update({
     'roomID': roomName,

@@ -66,10 +66,8 @@ List<Widget> presenceViewList(
     BuildContext context) {
   var resultList = <Widget>[];
   for (int i = 0; i < roomSnapshotList.length; i++) {
-    final currentMemberQuantity = roomSnapshotList[i]['members'].length;
-    final maxMemberQuantity = roomSnapshotList[i]['maxMembers'];
-    if (currentMemberQuantity > 0 &&
-        currentMemberQuantity < maxMemberQuantity) {
+    final isDisplay = roomSnapshotList[i]['isDisplay'];
+    if (isDisplay) {
       resultList.add(presenceView(roomSnapshotList[i], context));
     }
   }
@@ -80,9 +78,6 @@ Widget presenceView(
     QueryDocumentSnapshot<Object?> roomSnapshot, BuildContext context) {
   final maxMembers = roomSnapshot['maxMembers'].toString();
   final questionQuantity = roomSnapshot['questionQuantity'].toString();
-  final memberList = roomSnapshot['members'].cast<String>();
-  final nameList = roomSnapshot['names'].cast<String>();
-  final pointList = roomSnapshot['points'].cast<int>();
   final roomName = roomSnapshot.id;
   return InkWell(
     child: SizedBox(
@@ -94,14 +89,23 @@ Widget presenceView(
       ),
     ),
     onTap: () async {
-      joinRoom(memberList, nameList, pointList, roomName, context);
+      final currentMemberQuantity = roomSnapshot['members'].length;
+      final maxMemberQuantity = roomSnapshot['maxMembers'];
+      if (currentMemberQuantity > 0 &&
+          currentMemberQuantity < maxMemberQuantity) {
+        joinRoom(roomSnapshot, roomName, context);
+      }
     },
   );
 }
 
-Future<void> joinRoom(List<String> memberList, List<String> nameList,
-    List<int> pointList, String roomName, BuildContext context) async {
+Future<void> joinRoom(QueryDocumentSnapshot<Object?> roomSnapshot,
+    String roomName, BuildContext context) async {
   final uid = FirebaseAuth.instance.currentUser!.uid;
+  List<String> memberList = roomSnapshot['members'].cast<String>();
+  List<String> nameList = roomSnapshot['names'].cast<String>();
+  List<bool> standbyList = roomSnapshot['standbyList'].cast<bool>();
+  List<int> pointList = roomSnapshot['points'].cast<int>();
   memberList.add(uid);
   final addedMemberList = memberList.toSet().toList();
 
@@ -110,10 +114,13 @@ Future<void> joinRoom(List<String> memberList, List<String> nameList,
   nameList.add(userName!);
   final addedNameList = nameList.toSet().toList();
 
+  standbyList.add(false);
+
   pointList.add(0);
   await FirebaseFirestore.instance.collection('room').doc(roomName).update({
     'members': addedMemberList,
     'names': addedNameList,
+    'standbyList': standbyList,
     'points': pointList,
   });
   await FirebaseFirestore.instance.collection('users').doc(uid).update({
