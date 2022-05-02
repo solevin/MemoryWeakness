@@ -1,0 +1,23 @@
+{
+    "database_name": "myDatabase.db",
+    "database_version": 1,
+    "create_table_sql": [
+        "CREATE TABLE meatImages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, kind TEXT NOT NULL, state INTEGER NOT NULL)"
+    ],
+    "insert_record_sql": [
+        "INSERT INTO meatImages(name, kind, state) VALUES('C_0_3.jpeg' ,'C' ,0)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('B_0_3.jpeg' ,'B' ,0)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('C_0_2.jpeg' ,'C' ,0)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('B_0_2.jpeg' ,'B' ,0)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('C_1_1.jpeg' ,'C' ,1)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('B_1_1.jpeg' ,'B' ,1)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('C_1_0.jpeg' ,'C' ,1)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('B_1_0.jpeg' ,'B' ,1)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('A_0_2.jpeg' ,'A' ,0)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('A_0_3.jpeg' ,'A' ,0)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('A_1_0.jpeg' ,'A' ,1)",
+        "INSERT INTO meatImages(name, kind, state) VALUES('A_1_1.jpeg' ,'A' ,1)"
+    ],
+    "is_init_database": false,
+    "is_show_database_viewer": false
+}
