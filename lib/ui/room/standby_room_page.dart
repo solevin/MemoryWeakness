@@ -20,6 +20,7 @@ class StandbyRoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final roomName = ModalRoute.of(context)!.settings.arguments as String;
+    var isFinished = false;
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
@@ -31,35 +32,90 @@ class StandbyRoomPage extends StatelessWidget {
           },
         )),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              buildTaskList(roomName),
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: SizedBox(
-                  height: 30.h,
-                  width: 100.w,
-                  child: GestureDetector(
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(color: Colors.red),
-                      child: Center(
-                        child: Text(
-                          'start',
-                          style:
-                              TextStyle(fontSize: 20.sp, color: Colors.white),
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('room').snapshots(),
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              if (snapshot.hasError) {
+                return const Text('Something went wrong');
+              }
+              try {
+                final roomSnapshotList = snapshot.data!.docs;
+                int roomIndex = 0;
+                for (int i = 0; i < roomSnapshotList.length; i++) {
+                  if (roomSnapshotList[i].id == roomName) {
+                    roomIndex = i;
+                  }
+                }
+                final uid = FirebaseAuth.instance.currentUser!.uid;
+                final roomSnapshot = roomSnapshotList[roomIndex];
+                final names = roomSnapshot['names'].cast<String>();
+                final members = roomSnapshot['members'].cast<String>();
+                final standbyList = roomSnapshot['standbyList'].cast<bool>();
+                if (!standbyList.contains(false) && !isFinished) {
+                  isFinished = true;
+                  WidgetsBinding.instance!.addPostFrameCallback(
+                    (_) => Navigator.of(context).pushAndRemoveUntil<dynamic>(
+                      PlayPage.route(roomName: roomName),
+                      (_) => false,
+                    ),
+                  );
+                }
+                final myIndex = members.indexOf(uid);
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      height: 400.h,
+                      child: ListView(
+                        children: memberViewList(names, standbyList),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.h),
+                      child: SizedBox(
+                        height: 30.h,
+                        width: 100.w,
+                        child: GestureDetector(
+                          child: DecoratedBox(
+                            decoration: const BoxDecoration(color: Colors.red),
+                            child: Center(
+                              child: Text(
+                                standbyList[myIndex] ? 'cancel' : 'OK',
+                                style: TextStyle(
+                                    fontSize: 20.sp, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          onTap: () async {
+                            var isDisplay = roomSnapshot['isDisplay'];
+                            standbyList[myIndex] = !standbyList[myIndex];
+                            if (!standbyList.contains(true)) {
+                              isDisplay = false;
+                            }
+                            await FirebaseFirestore.instance
+                                .collection('room')
+                                .doc(roomSnapshotList[roomIndex].id)
+                                .update({
+                              'standbyList': standbyList,
+                              'isDisplay': isDisplay,
+                            });
+                          },
                         ),
                       ),
                     ),
-                    onTap: () async {
-                      Navigator.of(context).push<dynamic>(
-                        PlayPage.route(roomName: roomName),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
+                  ],
+                );
+              } catch (e) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+            },
           ),
         ),
       ),
@@ -67,58 +123,38 @@ class StandbyRoomPage extends StatelessWidget {
   }
 }
 
-Widget buildTaskList(String roomName) {
-  return StreamBuilder<QuerySnapshot>(
-    stream: FirebaseFirestore.instance.collection('room').snapshots(),
-    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-      if (!snapshot.hasData) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      }
-      if (snapshot.hasError) {
-        return const Text('Something went wrong');
-      }
-      try {
-        final memberSnapshotList = snapshot.data!.docs;
-        int roomIndex = 0;
-        for (int i = 0; i < memberSnapshotList.length; i++) {
-          if (memberSnapshotList[i].id == roomName) {
-            roomIndex = i;
-          }
-        }
-        final memberList =
-            memberSnapshotList[roomIndex]['names'].cast<String>();
-        return SizedBox(
-          height: 400.h,
-          child: ListView(
-            children: memberViewList(memberList),
-          ),
-        );
-      } catch (e) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      }
-    },
-  );
-}
-
-List<Widget> memberViewList(List<String> memberList) {
+List<Widget> memberViewList(List<String> names, List<bool> standbyList) {
   var resultList = <Widget>[];
-  for (int i = 0; i < memberList.length; i++) {
-    resultList.add(memberView(memberList[i]));
+  for (int i = 0; i < names.length; i++) {
+    resultList.add(memberView(names[i], standbyList[i]));
   }
   return resultList;
 }
 
-Widget memberView(String roomSnapshot) {
+Widget memberView(String userName, bool standby) {
   return Card(
     child: SizedBox(
       width: 200.w,
       height: 50.h,
       child: Center(
-        child: Text(roomSnapshot),
+        child: Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(8.r),
+              child: Text(
+                userName,
+                style: TextStyle(fontSize: 20.sp, color: Colors.black),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.r),
+              child: Text(
+                standby ? 'OK' : '',
+                style: TextStyle(fontSize: 20.sp, color: Colors.black),
+              ),
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -137,15 +173,14 @@ Future<void> leaveRoom(String roomName, BuildContext context) async {
     }
   }
   final uid = FirebaseAuth.instance.currentUser!.uid;
-  List<String> memberList =
-      roomSnapshotList[roomIndex]['members'].cast<String>();
-  memberList.remove(uid);
-  final deletedMemberList = memberList.toSet().toList();
+  List<String> members = roomSnapshotList[roomIndex]['members'].cast<String>();
+  members.remove(uid);
+  final deletedMemberList = members.toSet().toList();
   final preference = await SharedPreferences.getInstance();
   final userName = preference.getString("userName");
-  List<String> nameList = roomSnapshotList[roomIndex]['names'].cast<String>();
-  nameList.remove(userName);
-  final deletedNameList = memberList.toSet().toList();
+  List<String> names = roomSnapshotList[roomIndex]['names'].cast<String>();
+  names.remove(userName);
+  final deletedNameList = members.toSet().toList();
   if (deletedMemberList.isNotEmpty) {
     await FirebaseFirestore.instance
         .collection('room')

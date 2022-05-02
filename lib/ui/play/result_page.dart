@@ -193,12 +193,26 @@ Future<void> replay(RoomState roomState, BuildContext context) async {
     });
   }
   for (int i = 0; i < roomSnapshotList.length; i++) {
-    if (newRoomName == roomSnapshotList[i].id) {
-      joinRoom(roomState.members, roomState.names, roomState.points,
-          newRoomName, context);
+    if (roomSnapshotList[i].id == newRoomName) {
+      joinRoom(roomSnapshotList[i], newRoomName, context);
     }
   }
   createRoom(roomState.questionQuantity, roomState.maxMembers, newRoomName);
+  int i = 0;
+  while (i < 10000) {
+    try {
+      await FirebaseFirestore.instance
+          .collection('room')
+          .doc(newRoomName)
+          .update({
+        'isDisplay': false,
+      });
+      break;
+    } catch (e) {
+      Future.delayed(const Duration(milliseconds: 1));
+      i++;
+    }
+  }
   Navigator.of(context).push<dynamic>(
     StandbyRoomPage.route(roomName: newRoomName),
   );

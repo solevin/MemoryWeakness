@@ -8,7 +8,6 @@ type User = {
   isOnline: boolean;
   lastSeen: number;
   roomID: string;
-  name: string;
 };
 
 type Room = {
@@ -16,12 +15,14 @@ type Room = {
   names: Array<string>;
   leaves: Array<string>;
   points: Array<number>;
+  standbyList: Array<boolean>;
   maxMembers: number;
   questionQuantity: number;
   values: Array<string>;
   openIds: Array<string>;
   visibleList: Array<boolean>;
   turn: string;
+  isDisplay: boolean;
 };
 
 exports.onUserStatusChange = functions.database
@@ -81,6 +82,5 @@ exports.onUserStatusChange = functions.database
         isOnline: isOnline,
         lastSeen: Date.now(),
         roomID: "",
-        name: "",
       });
     });
