@@ -78,6 +78,10 @@ class PlayPage extends StatelessWidget {
                     child: checkButton(roomSnapshot, context, roomName),
                     visible: isVisible,
                   ),
+                  Visibility(
+                    child: passButton(roomSnapshot, context, roomName),
+                    visible: isVisible,
+                  ),
                   Wrap(
                     alignment: WrapAlignment.start,
                     spacing: 8.h,
@@ -179,7 +183,7 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot,
       color: Colors.purple,
       child: GestureDetector(
         child: Text(
-          'OK',
+          'Check',
           style: TextStyle(fontSize: 20.sp, color: Colors.white),
         ),
         onTap: () async {
@@ -219,6 +223,43 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot,
           //     ResultPage.route(roomName: roomName),
           //   );
           // }
+        },
+      ),
+    ),
+  );
+}
+
+Widget passButton(QueryDocumentSnapshot<Object?> roomSnapshot,
+    BuildContext context, String roomName) {
+  return Padding(
+    padding: EdgeInsets.all(8.r),
+    child: Container(
+      height: 30.h,
+      width: 60.w,
+      color: Colors.purple,
+      child: GestureDetector(
+        child: Text(
+          'Pass',
+          style: TextStyle(fontSize: 20.sp, color: Colors.white),
+        ),
+        onTap: () async {
+          List<String> leaves = roomSnapshot['leaves'].cast<String>();
+          List<String> names = roomSnapshot['names'].cast<String>();
+          List<String> members = roomSnapshot['members'].cast<String>();
+          var turn = roomSnapshot['turn'];
+          var nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
+          turn = names[nextTurnIndex];
+          while (leaves.contains(members[names.indexOf(turn)])) {
+            nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
+            turn = names[nextTurnIndex];
+          }
+          await FirebaseFirestore.instance
+              .collection('room')
+              .doc(roomSnapshot.id)
+              .update({
+            'openIds': [],
+            'turn': turn,
+          });
         },
       ),
     ),
