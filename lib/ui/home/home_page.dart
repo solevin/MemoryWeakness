@@ -71,8 +71,7 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  onTap: () async {
-                  },
+                  onTap: () {},
                 ),
                 InkWell(
                   child: Container(

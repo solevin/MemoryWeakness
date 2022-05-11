@@ -127,15 +127,17 @@ Widget eachPanel(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
 }
 
 Widget display(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
+  final path = roomSnapshot['pathList'][id].toString();
   return SizedBox(
     width: 40.r,
     height: 40.r,
-    child: DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.amber,
-      ),
-      child: Text(roomSnapshot['values'][id].toString()),
-    ),
+    // child: DecoratedBox(
+    //   decoration: const BoxDecoration(
+    //     color: Colors.amber,
+    //   ),
+    //   child: Text(roomSnapshot['values'][id].toString()),
+    // ),
+    child: Image.asset(path),
   );
 }
 
