@@ -33,6 +33,28 @@ class MeatDao {
     return eachStateList;
   }
 
+  Future<List<int>> findByKind(String kind) async {
+    final db = await _dbProvider.database;
+    final result =
+        await db!.query(tableNameMeats, where: 'kind=?', whereArgs: [kind]);
+    var eachKindList = <int>[];
+    for (var i = 0; i < result.length; i++) {
+      eachKindList.add(result[i]['id'] as int);
+    }
+    return eachKindList;
+  }
+
+  Future<List<String>> createKindList() async {
+    final db = await _dbProvider.database;
+    final result = await db!.query(tableNameMeats);
+    var kindList = <String>[];
+    for (var i = 0; i < result.length; i++) {
+      kindList.add(result[i]['kind'] as String);
+    }
+    final tmp = kindList.toSet().toList();
+    return tmp;
+  }
+
   Future<int> update(int id, Meat meat) async {
     final db = await _dbProvider.database;
     final result = await db!.update(
