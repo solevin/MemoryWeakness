@@ -21,6 +21,7 @@ exports.onUserStatusChange = functions.database
             const memberList = room.members;
             const nameList = room.names;
             const leaveList = room.leaves;
+            const grayList = room.grayList;
             if (memberList.length > leaveList.length) {
                 const leaveIndex = memberList.indexOf(context.params.uid);
                 leaveList.push(memberList[leaveIndex]);
@@ -38,10 +39,14 @@ exports.onUserStatusChange = functions.database
                         turnId = memberList[nameList.indexOf(turn)];
                     }
                 }
+                if (grayList.indexOf(memberList[leaveIndex]) < 0) {
+                    grayList.push(memberList[leaveIndex]);
+                }
                 if (memberList.length > leaveList.length) {
                     roomRef.update({
                         turn: turn,
                         leaves: leaveList,
+                        grayList: grayList,
                     });
                 }
                 else {

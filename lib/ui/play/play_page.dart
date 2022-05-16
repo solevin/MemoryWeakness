@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/play/result_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayPage extends StatelessWidget {
@@ -45,8 +46,12 @@ class PlayPage extends StatelessWidget {
             final isVisible = openIds.length == 2;
             final turnText = roomSnapshot['turn'] + 'のターン';
             List<bool> visibleList = roomSnapshot['visibleList'].cast<bool>();
+            final grayList = roomSnapshot['grayList'].cast<String>();
+            final members = roomSnapshot['members'].cast<String>();
 
-            if (!visibleList.contains(true) && !isFinished) {
+            if ((!visibleList.contains(true) ||
+                    grayList.length == members.length) &&
+                !isFinished) {
               isFinished = true;
               WidgetsBinding.instance!.addPostFrameCallback(
                 (_) => Navigator.of(context).pushAndRemoveUntil<dynamic>(
@@ -74,6 +79,11 @@ class PlayPage extends StatelessWidget {
                     spacing: 8.h,
                     children: panels(roomSnapshot),
                   ),
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8.h,
+                    children: scores(roomSnapshot),
+                  ),
                   Visibility(
                     child: checkButton(roomSnapshot, context, roomName),
                     visible: isVisible,
@@ -81,11 +91,6 @@ class PlayPage extends StatelessWidget {
                   Visibility(
                     child: passButton(roomSnapshot, context, roomName),
                     visible: isVisible,
-                  ),
-                  Wrap(
-                    alignment: WrapAlignment.start,
-                    spacing: 8.h,
-                    children: scores(roomSnapshot),
                   ),
                 ],
               ),
@@ -191,31 +196,41 @@ Widget checkButton(QueryDocumentSnapshot<Object?> roomSnapshot,
           List<int> openIds = roomSnapshot['openIds'].cast<int>();
           List<int> values = roomSnapshot['values'].cast<int>();
           List<int> points = roomSnapshot['points'].cast<int>();
-          List<String> leaves = roomSnapshot['leaves'].cast<String>();
+          List<String> grayList = roomSnapshot['grayList'].cast<String>();
           List<String> names = roomSnapshot['names'].cast<String>();
           List<String> members = roomSnapshot['members'].cast<String>();
           var turn = roomSnapshot['turn'];
+          final playerIndex = names.indexOf(turn);
+          List<int> hp = roomSnapshot['HPs'].cast<int>();
+          var myHp = hp[playerIndex];
           if (values[openIds[0]] == values[openIds[1]]) {
             visibleList[openIds[0]] = false;
             visibleList[openIds[1]] = false;
-            final playerIndex = names.indexOf(turn);
             final addedPoint = points[playerIndex] + 1;
             points[playerIndex] = addedPoint;
           } else {
             var nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
             turn = names[nextTurnIndex];
-            while (leaves.contains(members[names.indexOf(turn)])) {
+            while (grayList.contains(members[names.indexOf(turn)])) {
               nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
               turn = names[nextTurnIndex];
             }
+            myHp--;
+            if (myHp == 0) {
+              final uid = FirebaseAuth.instance.currentUser!.uid;
+              grayList.add(uid);
+            }
           }
+          hp[playerIndex] = myHp;
           await FirebaseFirestore.instance
               .collection('room')
               .doc(roomSnapshot.id)
               .update({
             'points': points,
             'openIds': [],
+            'HPs': hp,
             'visibleList': visibleList,
+            'grayList': grayList,
             'turn': turn,
           });
           // if (!visibleList.contains(true)) {
@@ -243,13 +258,13 @@ Widget passButton(QueryDocumentSnapshot<Object?> roomSnapshot,
           style: TextStyle(fontSize: 20.sp, color: Colors.white),
         ),
         onTap: () async {
-          List<String> leaves = roomSnapshot['leaves'].cast<String>();
+          List<String> grayList = roomSnapshot['grayList'].cast<String>();
           List<String> names = roomSnapshot['names'].cast<String>();
           List<String> members = roomSnapshot['members'].cast<String>();
           var turn = roomSnapshot['turn'];
           var nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
           turn = names[nextTurnIndex];
-          while (leaves.contains(members[names.indexOf(turn)])) {
+          while (grayList.contains(members[names.indexOf(turn)])) {
             nextTurnIndex = (names.indexOf(turn) + 1) % names.length;
             turn = names[nextTurnIndex];
           }
@@ -277,13 +292,44 @@ List<Widget> scores(QueryDocumentSnapshot<Object?> roomSnapshot) {
 Widget eachScore(QueryDocumentSnapshot<Object?> roomSnapshot, int id) {
   final name = roomSnapshot['names'][id];
   final point = roomSnapshot['points'][id];
-  final leaves = roomSnapshot['leaves'].cast<String>();
+  final grayList = roomSnapshot['grayList'].cast<String>();
   final uid = roomSnapshot['members'][id];
-  final isLeaved = leaves.indexOf(uid) >= 0;
+  final hp = roomSnapshot['HPs'][id];
+  final maxHp = roomSnapshot['maxHP'];
+  final isLeaved = grayList.indexOf(uid) >= 0;
 
-  return Text(
-    '$name : $point',
-    style: TextStyle(
-        fontSize: 20.sp, color: isLeaved ? Colors.grey : Colors.black),
+  return Column(
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '$name',
+            style: TextStyle(
+                fontSize: 20.sp, color: isLeaved ? Colors.grey : Colors.black),
+          ),
+          Row(
+            children: hearts(hp, maxHp),
+          )
+        ],
+      ),
+      Text(
+        '$point',
+        style: TextStyle(
+            fontSize: 20.sp, color: isLeaved ? Colors.grey : Colors.black),
+      ),
+    ],
   );
+}
+
+List<Widget> hearts(int hp, int maxHp) {
+  List<Widget> hearts = [];
+  int i = 0;
+  for (; i < hp; i++) {
+    hearts.add(Icon(Icons.favorite));
+  }
+  for (; i < maxHp; i++) {
+    hearts.add(Icon(Icons.heart_broken));
+  }
+  return hearts;
 }
