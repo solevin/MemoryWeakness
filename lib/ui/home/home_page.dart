@@ -177,14 +177,6 @@ class HomePage extends StatelessWidget {
                             onPressed: model.userName.isEmpty
                                 ? null
                                 : () async {
-                                    final uid =
-                                        FirebaseAuth.instance.currentUser!.uid;
-                                    await FirebaseFirestore.instance
-                                        .collection('users')
-                                        .doc(uid)
-                                        .update({
-                                      'name': model.userName,
-                                    });
                                     model.isStack = false;
                                     model.notify();
                                     final preference =

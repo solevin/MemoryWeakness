@@ -21,7 +21,8 @@ class CreateRoomPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = setItems();
     final _questionQuantity = items[0];
-    final _memberQuantity = items[1];
+    final _maxMember = items[1];
+    final _maxHP = items[2];
     const textColor = Color(0xFF5C4444);
     const backColor = Color(0xFFFFFBE5);
     return Scaffold(
@@ -92,8 +93,8 @@ class CreateRoomPage extends StatelessWidget {
                         height: 35.h,
                         child: Center(
                           child: DropdownButton(
-                            items: _memberQuantity,
-                            value: model.selectedMemberQuantity,
+                            items: _maxMember,
+                            value: model.selectedMaxMember,
                             style: TextStyle(
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w700,
@@ -101,7 +102,46 @@ class CreateRoomPage extends StatelessWidget {
                             ),
                             dropdownColor: backColor,
                             onChanged: (value) => {
-                              model.selectedMemberQuantity = value! as int,
+                              model.selectedMaxMember = value! as int,
+                              model.notify(),
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.h),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'HP : ',
+                      style: TextStyle(
+                        fontSize: 20.sp,
+                        fontWeight: FontWeight.w700,
+                        color: textColor,
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: 100.w,
+                        height: 35.h,
+                        child: Center(
+                          child: DropdownButton(
+                            items: _maxHP,
+                            value: model.selectedHP,
+                            style: TextStyle(
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w700,
+                              color: textColor,
+                            ),
+                            dropdownColor: backColor,
+                            onChanged: (value) => {
+                              model.selectedHP = value! as int,
                               model.notify(),
                             },
                           ),
@@ -118,7 +158,7 @@ class CreateRoomPage extends StatelessWidget {
                   width: 100.w,
                   child: GestureDetector(
                     child: DecoratedBox(
-                      decoration: BoxDecoration(color: Colors.orange),
+                      decoration: const BoxDecoration(color: Colors.orange),
                       child: Center(
                         child: Text(
                           'set',
@@ -132,7 +172,7 @@ class CreateRoomPage extends StatelessWidget {
                     onTap: () async {
                       final roomName = await nameNewRoom();
                       await createRoom(model.selectedQuestionQuantity,
-                          model.selectedMemberQuantity, roomName);
+                          model.selectedMaxMember, model.selectedHP, roomName);
                       Navigator.of(context).push<dynamic>(
                         StandbyRoomPage.route(roomName: roomName),
                       );
@@ -150,7 +190,8 @@ class CreateRoomPage extends StatelessWidget {
 
 List<List<DropdownMenuItem<int>>> setItems() {
   final _questionQuantity = <DropdownMenuItem<int>>[];
-  final _memberQuantity = <DropdownMenuItem<int>>[];
+  final _maxMember = <DropdownMenuItem<int>>[];
+  final _maxHP = <DropdownMenuItem<int>>[];
 
   _questionQuantity
     ..add(
@@ -190,7 +231,7 @@ List<List<DropdownMenuItem<int>>> setItems() {
       ),
     );
 
-  _memberQuantity
+  _maxMember
     ..add(
       DropdownMenuItem(
         value: 1,
@@ -227,7 +268,45 @@ List<List<DropdownMenuItem<int>>> setItems() {
         ),
       ),
     );
-  return [_questionQuantity, _memberQuantity];
+
+  _maxHP
+    ..add(
+      DropdownMenuItem(
+        value: 1,
+        child: Text(
+          '1',
+          style: TextStyle(fontSize: 20.sp),
+        ),
+      ),
+    )
+    ..add(
+      DropdownMenuItem(
+        value: 2,
+        child: Text(
+          '2',
+          style: TextStyle(fontSize: 20.sp),
+        ),
+      ),
+    )
+    ..add(
+      DropdownMenuItem(
+        value: 3,
+        child: Text(
+          '3',
+          style: TextStyle(fontSize: 20.sp),
+        ),
+      ),
+    )
+    ..add(
+      DropdownMenuItem(
+        value: 4,
+        child: Text(
+          '4',
+          style: TextStyle(fontSize: 20.sp),
+        ),
+      ),
+    );
+  return [_questionQuantity, _maxMember, _maxHP];
 }
 
 Future<String> nameNewRoom() async {
@@ -250,7 +329,7 @@ Future<String> nameNewRoom() async {
 }
 
 Future<void> createRoom(
-    int questionQuantity, int memberQuantity, String roomName) async {
+    int questionQuantity, int maxMembers, int maxHP, String roomName) async {
   final uid = FirebaseAuth.instance.currentUser!.uid;
   final rand = math.Random();
   List<int> valueList = [];
@@ -279,10 +358,13 @@ Future<void> createRoom(
     'members': [uid],
     'names': [userName],
     'points': [0],
+    'HPs': [maxHP],
     'standbyList': [false],
     'leaves': [],
-    'maxMembers': memberQuantity,
+    'grayList': [],
+    'maxMembers': maxMembers,
     'questionQuantity': valueLength,
+    'maxHP': maxHP,
     'values': valueList,
     'pathList': pathList,
     'openIds': [],
@@ -309,32 +391,32 @@ List<int> createValueList(int valueLength, int numOfKind) {
   return valueList;
 }
 
-Future<List<int>> TMP(int valueLength, List<String> kindList) async {
-  List<int> valueList = [];
-  var selectedKindList = [];
-  final rand = math.Random();
-  final meatDao = MeatDao();
+// Future<List<int>> TMP(int valueLength, List<String> kindList) async {
+//   List<int> valueList = [];
+//   var selectedKindList = [];
+//   final rand = math.Random();
+//   final meatDao = MeatDao();
 
-  for (int i = 0; i < valueLength; i++) {
-    var kindIndex = rand.nextInt(kindList.length);
-    while (selectedKindList.contains(kindList[kindIndex])) {
-      kindIndex = rand.nextInt(kindList.length);
-    }
-    selectedKindList.add(kindList[kindIndex]);
-    final extractedList = await meatDao.findByKind(kindList[kindIndex]);
-    var extractIndex = rand.nextInt(extractedList.length);
-    final selectedFirstId = extractedList[extractIndex];
-    extractIndex = rand.nextInt(extractedList.length);
-    var selectedSecondId = extractedList[extractIndex];
-    while (selectedFirstId == selectedSecondId) {
-      extractIndex = rand.nextInt(extractedList.length);
-      selectedSecondId = extractedList[extractIndex];
-    }
-    valueList.add(selectedFirstId);
-    valueList.add(selectedSecondId);
-  }
-  return valueList;
-}
+//   for (int i = 0; i < valueLength; i++) {
+//     var kindIndex = rand.nextInt(kindList.length);
+//     while (selectedKindList.contains(kindList[kindIndex])) {
+//       kindIndex = rand.nextInt(kindList.length);
+//     }
+//     selectedKindList.add(kindList[kindIndex]);
+//     final extractedList = await meatDao.findByKind(kindList[kindIndex]);
+//     var extractIndex = rand.nextInt(extractedList.length);
+//     final selectedFirstId = extractedList[extractIndex];
+//     extractIndex = rand.nextInt(extractedList.length);
+//     var selectedSecondId = extractedList[extractIndex];
+//     while (selectedFirstId == selectedSecondId) {
+//       extractIndex = rand.nextInt(extractedList.length);
+//       selectedSecondId = extractedList[extractIndex];
+//     }
+//     valueList.add(selectedFirstId);
+//     valueList.add(selectedSecondId);
+//   }
+//   return valueList;
+// }
 
 Future<List<String>> createPathList(
     List<int> valueList, List<String> kindList) async {

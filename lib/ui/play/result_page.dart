@@ -167,6 +167,7 @@ Future<RoomState> initResultPage(String roomName) async {
     roomSnapshot['leaves'].cast<String>(),
     roomSnapshot['maxMembers'],
     roomSnapshot['questionQuantity'],
+    roomSnapshot['maxHP'],
   );
   return roomState;
 }
@@ -197,7 +198,8 @@ Future<void> replay(RoomState roomState, BuildContext context) async {
       joinRoom(roomSnapshotList[i], newRoomName, context);
     }
   }
-  createRoom(roomState.questionQuantity, roomState.maxMembers, newRoomName);
+  createRoom(roomState.questionQuantity, roomState.maxMembers, roomState.maxHP,
+      newRoomName);
   int i = 0;
   while (i < 10000) {
     try {
@@ -226,6 +228,7 @@ class RoomState {
   List<String> leaves;
   int maxMembers;
   int questionQuantity;
+  int maxHP;
   RoomState(this.roomName, this.members, this.names, this.points, this.leaves,
-      this.maxMembers, this.questionQuantity);
+      this.maxMembers, this.questionQuantity, this.maxHP);
 }

@@ -106,6 +106,8 @@ Future<void> joinRoom(QueryDocumentSnapshot<Object?> roomSnapshot,
   List<String> nameList = roomSnapshot['names'].cast<String>();
   List<bool> standbyList = roomSnapshot['standbyList'].cast<bool>();
   List<int> pointList = roomSnapshot['points'].cast<int>();
+  List<int> HPs = roomSnapshot['HPs'].cast<int>();
+  int maxHP = roomSnapshot['maxHP'];
   memberList.add(uid);
   final addedMemberList = memberList.toSet().toList();
 
@@ -115,13 +117,14 @@ Future<void> joinRoom(QueryDocumentSnapshot<Object?> roomSnapshot,
   final addedNameList = nameList.toSet().toList();
 
   standbyList.add(false);
-
   pointList.add(0);
+  HPs.add(maxHP);
   await FirebaseFirestore.instance.collection('room').doc(roomName).update({
     'members': addedMemberList,
     'names': addedNameList,
     'standbyList': standbyList,
     'points': pointList,
+    'HPs': HPs,
   });
   await FirebaseFirestore.instance.collection('users').doc(uid).update({
     'roomID': roomName,
