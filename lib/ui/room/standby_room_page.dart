@@ -58,7 +58,7 @@ class StandbyRoomPage extends StatelessWidget {
                 final standbyList = roomSnapshot['standbyList'].cast<bool>();
                 if (!standbyList.contains(false) && !isFinished) {
                   isFinished = true;
-                  WidgetsBinding.instance!.addPostFrameCallback(
+                  WidgetsBinding.instance.addPostFrameCallback(
                     (_) => Navigator.of(context).pushAndRemoveUntil<dynamic>(
                       PlayPage.route(roomName: roomName),
                       (_) => false,
@@ -70,7 +70,7 @@ class StandbyRoomPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(
-                      height: 400.h,
+                      height: 450.h,
                       child: ListView(
                         children: memberViewList(names, standbyList),
                       ),

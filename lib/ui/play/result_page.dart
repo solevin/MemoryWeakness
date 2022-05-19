@@ -25,7 +25,7 @@ class ResultPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final roomName = ModalRoute.of(context)!.settings.arguments as String;
     late RoomState roomState;
-    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       roomState = await initResultPage(roomName);
       context.read<ResultPageViewModel>().isInitialized = true;
       context.read<ResultPageViewModel>().notify();
@@ -199,7 +199,7 @@ Future<void> replay(RoomState roomState, BuildContext context) async {
     }
   }
   createRoom(roomState.questionQuantity, roomState.maxMembers, roomState.maxHP,
-      newRoomName);
+      newRoomName, '');
   int i = 0;
   while (i < 10000) {
     try {

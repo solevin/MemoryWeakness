@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/home/home_page.dart';
 import 'package:memory_weakness/ui/home/home_page_view.dart';
-import 'package:memory_weakness/ui/room/create_rooom_view.dart';
+import 'package:memory_weakness/ui/room/create_room_view.dart';
+import 'package:memory_weakness/ui/room/room_list_view.dart';
 import 'package:memory_weakness/ui/play/result_page_view.dart';
 import 'package:memory_weakness/ui/setting/setting_page_view.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -33,6 +34,9 @@ void main() async {
           ),
           provider.ChangeNotifierProvider(
             create: (_) => ResultPageViewModel(),
+          ),
+          provider.ChangeNotifierProvider(
+            create: (_) => RoomListViewModel(),
           ),
         ],
         child: ScreenUtilInit(

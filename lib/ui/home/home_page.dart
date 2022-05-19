@@ -20,7 +20,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final homePageModel = context.read<HomePageViewModel>();
-    WidgetsBinding.instance!
+    WidgetsBinding.instance
         .addPostFrameCallback((_) => checkFirstStartUp(homePageModel));
     return Scaffold(
       body: Stack(
