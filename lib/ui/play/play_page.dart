@@ -53,7 +53,7 @@ class PlayPage extends StatelessWidget {
                     grayList.length == members.length) &&
                 !isFinished) {
               isFinished = true;
-              WidgetsBinding.instance!.addPostFrameCallback(
+              WidgetsBinding.instance.addPostFrameCallback(
                 (_) => Navigator.of(context).pushAndRemoveUntil<dynamic>(
                   ResultPage.route(roomName: roomName),
                   (_) => false,

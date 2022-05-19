@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/db/meats_dao.dart';
-import 'package:memory_weakness/ui/room/create_rooom_view.dart';
+import 'package:memory_weakness/ui/room/create_room_view.dart';
 import 'package:memory_weakness/ui/room/standby_room_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -31,152 +31,299 @@ class CreateRoomPage extends StatelessWidget {
       ),
       body: Consumer<CreateRoomViewModel>(
         builder: (context, model, _) {
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          return Stack(
             children: [
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '問題数 : ',
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 100.w,
-                        height: 35.h,
-                        child: Center(
-                          child: DropdownButton(
-                            items: _questionQuantity,
-                            value: model.selectedQuestionQuantity,
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w700,
-                              color: textColor,
-                            ),
-                            dropdownColor: backColor,
-                            onChanged: (value) => {
-                              model.selectedQuestionQuantity = value! as int,
-                              model.notify(),
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '参加人数 : ',
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 100.w,
-                        height: 35.h,
-                        child: Center(
-                          child: DropdownButton(
-                            items: _maxMember,
-                            value: model.selectedMaxMember,
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w700,
-                              color: textColor,
-                            ),
-                            dropdownColor: backColor,
-                            onChanged: (value) => {
-                              model.selectedMaxMember = value! as int,
-                              model.notify(),
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'HP : ',
-                      style: TextStyle(
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w700,
-                        color: textColor,
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 100.w,
-                        height: 35.h,
-                        child: Center(
-                          child: DropdownButton(
-                            items: _maxHP,
-                            value: model.selectedHP,
-                            style: TextStyle(
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w700,
-                              color: textColor,
-                            ),
-                            dropdownColor: backColor,
-                            onChanged: (value) => {
-                              model.selectedHP = value! as int,
-                              model.notify(),
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.h),
-                child: SizedBox(
-                  height: 40.h,
-                  width: 100.w,
-                  child: GestureDetector(
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(color: Colors.orange),
-                      child: Center(
-                        child: Text(
-                          'set',
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '問題数 : ',
                           style: TextStyle(
-                            fontSize: 30.sp,
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w700,
                             color: textColor,
                           ),
                         ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 100.w,
+                            height: 35.h,
+                            child: Center(
+                              child: DropdownButton(
+                                items: _questionQuantity,
+                                value: model.selectedQuestionQuantity,
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                                dropdownColor: backColor,
+                                onChanged: (value) => {
+                                  model.selectedQuestionQuantity =
+                                      value! as int,
+                                  model.notify(),
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '参加人数 : ',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 100.w,
+                            height: 35.h,
+                            child: Center(
+                              child: DropdownButton(
+                                items: _maxMember,
+                                value: model.selectedMaxMember,
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                                dropdownColor: backColor,
+                                onChanged: (value) => {
+                                  model.selectedMaxMember = value! as int,
+                                  model.notify(),
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'HP : ',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 100.w,
+                            height: 35.h,
+                            child: Center(
+                              child: DropdownButton(
+                                items: _maxHP,
+                                value: model.selectedHP,
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                                dropdownColor: backColor,
+                                onChanged: (value) => {
+                                  model.selectedHP = value! as int,
+                                  model.notify(),
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          '鍵 : ',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
+                          ),
+                        ),
+                        Switch(
+                          value: model.isLock,
+                          onChanged: (_) {
+                            model.isLock = !model.isLock;
+                            model.notify();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(8.h),
+                    child: SizedBox(
+                      height: 40.h,
+                      width: 100.w,
+                      child: GestureDetector(
+                        child: DecoratedBox(
+                          decoration: const BoxDecoration(color: Colors.orange),
+                          child: Center(
+                            child: Text(
+                              'set',
+                              style: TextStyle(
+                                fontSize: 30.sp,
+                                color: textColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                        onTap: () async {
+                          if (!model.isLock) {
+                            final roomName = await nameNewRoom();
+                            await createRoom(
+                                model.selectedQuestionQuantity,
+                                model.selectedMaxMember,
+                                model.selectedHP,
+                                roomName,
+                                '');
+                            Navigator.of(context).push<dynamic>(
+                              StandbyRoomPage.route(roomName: roomName),
+                            );
+                          } else {
+                            model.isStack = true;
+                            model.notify();
+                          }
+                        },
                       ),
                     ),
-                    onTap: () async {
-                      final roomName = await nameNewRoom();
-                      await createRoom(model.selectedQuestionQuantity,
-                          model.selectedMaxMember, model.selectedHP, roomName);
-                      Navigator.of(context).push<dynamic>(
-                        StandbyRoomPage.route(roomName: roomName),
-                      );
-                    },
+                  ),
+                ],
+              ),
+              Visibility(
+                visible: model.isStack,
+                child: Center(
+                  child: Container(
+                    height: 230.h,
+                    width: 320.w,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black),
+                      borderRadius: BorderRadius.circular(15),
+                      color: Colors.white,
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          spreadRadius: 0.8,
+                          blurRadius: 8.0,
+                          offset: Offset(10, 10),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          'PassCode',
+                          style: TextStyle(
+                            fontSize: 20.sp,
+                            color: Colors.black,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 60.h,
+                          width: 280.w,
+                          child: TextField(
+                            keyboardType: TextInputType.number,
+                            // inputFormatters: <TextInputFormatter>[
+                            //   FilteringTextInputFormatter.digitsOnly
+                            // ],
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLength: 4,
+                            style: TextStyle(
+                              fontSize: 20.sp,
+                              color: Colors.black,
+                            ),
+                            onChanged: (text) {
+                              model.passCode = text;
+                              model.notify();
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          height: 40.h,
+                          width: 100.w,
+                          child: ElevatedButton(
+                            onPressed: model.passCode.length != 4
+                                ? null
+                                : () async {
+                                    final roomName = await nameNewRoom();
+                                    await createRoom(
+                                        model.selectedQuestionQuantity,
+                                        model.selectedMaxMember,
+                                        model.selectedHP,
+                                        roomName,
+                                        model.passCode);
+                                    Navigator.of(context).push<dynamic>(
+                                      StandbyRoomPage.route(roomName: roomName),
+                                    );
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              primary: Colors.yellow,
+                            ),
+                            child: Text(
+                              'OK',
+                              style: TextStyle(
+                                fontSize: 20.sp,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(8.r),
+                          child: SizedBox(
+                            height: 40.h,
+                            width: 100.w,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                model.isStack = false;
+                                model.passCode = '';
+                                model.notify();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                primary: Colors.yellow,
+                              ),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  fontSize: 20.sp,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -328,8 +475,8 @@ Future<String> nameNewRoom() async {
   return roomName;
 }
 
-Future<void> createRoom(
-    int questionQuantity, int maxMembers, int maxHP, String roomName) async {
+Future<void> createRoom(int questionQuantity, int maxMembers, int maxHP,
+    String roomName, String passCode) async {
   final uid = FirebaseAuth.instance.currentUser!.uid;
   final rand = math.Random();
   List<int> valueList = [];
@@ -371,6 +518,7 @@ Future<void> createRoom(
     'visibleList': visibleList,
     'turn': userName,
     'isDisplay': true,
+    'passCode': passCode,
   });
   await FirebaseFirestore.instance.collection('users').doc(uid).update({
     'roomID': roomName,
@@ -390,33 +538,6 @@ List<int> createValueList(int valueLength, int numOfKind) {
   }
   return valueList;
 }
-
-// Future<List<int>> TMP(int valueLength, List<String> kindList) async {
-//   List<int> valueList = [];
-//   var selectedKindList = [];
-//   final rand = math.Random();
-//   final meatDao = MeatDao();
-
-//   for (int i = 0; i < valueLength; i++) {
-//     var kindIndex = rand.nextInt(kindList.length);
-//     while (selectedKindList.contains(kindList[kindIndex])) {
-//       kindIndex = rand.nextInt(kindList.length);
-//     }
-//     selectedKindList.add(kindList[kindIndex]);
-//     final extractedList = await meatDao.findByKind(kindList[kindIndex]);
-//     var extractIndex = rand.nextInt(extractedList.length);
-//     final selectedFirstId = extractedList[extractIndex];
-//     extractIndex = rand.nextInt(extractedList.length);
-//     var selectedSecondId = extractedList[extractIndex];
-//     while (selectedFirstId == selectedSecondId) {
-//       extractIndex = rand.nextInt(extractedList.length);
-//       selectedSecondId = extractedList[extractIndex];
-//     }
-//     valueList.add(selectedFirstId);
-//     valueList.add(selectedSecondId);
-//   }
-//   return valueList;
-// }
 
 Future<List<String>> createPathList(
     List<int> valueList, List<String> kindList) async {
