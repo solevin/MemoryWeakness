@@ -29,7 +29,6 @@ class DBProvider {
   }
 
   Future<Database> initDB() async {
-    print('init');
     final settings = await _settings;
     final path = join(
       await getDatabasesPath(),
