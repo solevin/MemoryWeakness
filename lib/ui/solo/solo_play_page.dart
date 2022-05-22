@@ -95,12 +95,6 @@ Widget display(SoloPlayViewModel model, int id) {
   return SizedBox(
     width: 40.r,
     height: 40.r,
-    // child: DecoratedBox(
-    //   decoration: const BoxDecoration(
-    //     color: Colors.amber,
-    //   ),
-    //   child: Text(roomSnapshot['values'][id].toString()),
-    // ),
     child: Image.asset(model.pathList[id]),
   );
 }
@@ -149,19 +143,27 @@ Widget checkButton(SoloPlayViewModel model, BuildContext context) {
             final addedPoint = model.pointList[model.turn] + 1;
             model.pointList[model.turn] = addedPoint;
           } else {
-            // var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
-            // while (model.grayList.contains(nextTurnIndex)) {
-            //   nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
-            // }
             myHp--;
+            model.hpList[model.turn] = myHp;
             if (myHp == 0) {
               model.grayList.add(model.turn);
             }
+            if (model.grayList.length == model.memberQuantity) {
+              // TODO
+            }
+            var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
+            while (model.grayList.contains(nextTurnIndex)) {
+              nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
+            }
+            model.turn = nextTurnIndex;
           }
-          model.hpList[model.turn] = myHp;
           model.openIds = [];
           model.isVisible = false;
+          model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
           model.notify();
+          if (model.turn != 0) {
+            cpuTurn(model, model.turn);
+          }
         },
       ),
     ),
@@ -181,18 +183,20 @@ Widget passButton(SoloPlayViewModel model, BuildContext context) {
           style: TextStyle(fontSize: 20.sp, color: Colors.white),
         ),
         onTap: () {
-          // List<String> grayList = roomSnapshot['grayList'].cast<String>();
-          // List<String> names = roomSnapshot['names'].cast<String>();
-          // List<String> members = roomSnapshot['members'].cast<String>();
-          // var turn = roomSnapshot['turn'];
-
-          // var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
-          // while (model.grayList.contains(nextTurnIndex)) {
-          //   nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
-          // }
+          var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
+          while (model.grayList.contains(nextTurnIndex)) {
+            nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
+          }
+          print(nextTurnIndex);
+          model.turn = nextTurnIndex;
           model.openIds = [];
           model.isVisible = false;
+          model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
+          print(model.isVisible);
           model.notify();
+          if (model.turn != 0) {
+            cpuTurn(model, model.turn);
+          }
         },
       ),
     ),
@@ -208,12 +212,6 @@ List<Widget> scores(SoloPlayViewModel model) {
 }
 
 Widget eachScore(SoloPlayViewModel model, int id) {
-  // final name = roomSnapshot['names'][id];
-  // final point = roomSnapshot['points'][id];
-  // final grayList = roomSnapshot['grayList'].cast<String>();
-  // final uid = roomSnapshot['members'][id];
-  // final hp = roomSnapshot['HPs'][id];
-  // final maxHp = roomSnapshot['maxHP'];
   final isLeaved = model.grayList.contains(id);
   final name = id == 0 ? 'Player' : 'CPU$id';
 
@@ -253,6 +251,65 @@ List<Widget> hearts(int hp, int maxHp) {
   return hearts;
 }
 
-void cpuTurn(int index){
+void cpuTurn(SoloPlayViewModel model, int index) async {
+  await cpuFace(model, 0);
+  await cpuFace(model, 1);
+  await cpuCheck(model);
+}
 
+Future<void> cpuFace(SoloPlayViewModel model, int id) async {
+  model.openIds.add(id);
+  if (model.openIds.length == 2) {
+    model.isVisible = true;
+  }
+  await Future.delayed(const Duration(seconds: 3));
+  model.notify();
+}
+
+Future<void> cpuCheck(SoloPlayViewModel model) async {
+  var myHp = model.hpList[model.turn];
+  if (model.valueList[model.openIds[0]] == model.valueList[model.openIds[1]]) {
+    model.visibleList[model.openIds[0]] = false;
+    model.visibleList[model.openIds[1]] = false;
+    final addedPoint = model.pointList[model.turn] + 1;
+    model.pointList[model.turn] = addedPoint;
+  } else {
+    myHp--;
+    if (myHp == 0) {
+      model.grayList.add(model.turn);
+    }
+    model.hpList[model.turn] = myHp;
+    if (model.grayList.length == model.memberQuantity) {
+      // TODO
+    }
+    var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
+    while (model.grayList.contains(nextTurnIndex)) {
+      nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
+    }
+    model.turn = nextTurnIndex;
+  }
+  model.openIds = [];
+  model.isVisible = false;
+  model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
+  await Future.delayed(const Duration(seconds: 3));
+  model.notify();
+  if (model.turn != 0) {
+    cpuTurn(model, model.turn);
+  }
+}
+
+Future<void> cpuPass(SoloPlayViewModel model) async {
+  var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
+  while (model.grayList.contains(nextTurnIndex)) {
+    nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
+  }
+  model.turn = nextTurnIndex;
+  model.openIds = [];
+  model.isVisible = false;
+  model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
+  await Future.delayed(const Duration(seconds: 3));
+  model.notify();
+  if (model.turn != 0) {
+    cpuTurn(model, model.turn);
+  }
 }

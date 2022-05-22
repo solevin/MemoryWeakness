@@ -13,7 +13,7 @@ class SoloPlayViewModel with ChangeNotifier {
   int maxHP = 0;
   int memberQuantity = 0;
   int questionQuantity = 0;
-  String turnText = '';
+  String turnText = 'Player';
   bool isVisible = false;
 
 
