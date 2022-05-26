@@ -10,6 +10,8 @@ import 'package:memory_weakness/ui/room/create_room_view.dart';
 import 'package:memory_weakness/ui/room/room_list_view.dart';
 import 'package:memory_weakness/ui/play/result_page_view.dart';
 import 'package:memory_weakness/ui/setting/setting_page_view.dart';
+import 'package:memory_weakness/ui/solo/setting_cpu_view.dart';
+import 'package:memory_weakness/ui/solo/solo_play_view.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:provider/provider.dart' as provider;
 
@@ -37,6 +39,12 @@ void main() async {
           ),
           provider.ChangeNotifierProvider(
             create: (_) => RoomListViewModel(),
+          ),
+          provider.ChangeNotifierProvider(
+            create: (_) => SettingCpuViewModel(),
+          ),
+          provider.ChangeNotifierProvider(
+            create: (_) => SoloPlayViewModel(),
           ),
         ],
         child: ScreenUtilInit(

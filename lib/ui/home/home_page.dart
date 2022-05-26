@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:memory_weakness/db/meats_dao.dart';
 import 'package:memory_weakness/ui/room/room_list_page.dart';
 import 'package:memory_weakness/ui/home/home_page_view.dart';
 import 'package:memory_weakness/ui/setting/setting_page.dart';
+import 'package:memory_weakness/ui/solo/setting_cpu_view.dart';
+import 'package:memory_weakness/ui/solo/setting_cpu_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 
@@ -64,14 +63,19 @@ class HomePage extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        'View',
+                        'Solo',
                         style: TextStyle(
                           fontSize: 20.sp,
                         ),
                       ),
                     ),
                   ),
-                  onTap: () {},
+                  onTap: () {
+                    context.read<SettingCpuViewModel>().init();
+                    Navigator.of(context).push<dynamic>(
+                      SettingCpuPage.route(),
+                    );
+                  },
                 ),
                 InkWell(
                   child: Container(
