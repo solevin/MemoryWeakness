@@ -1,6 +1,8 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/solo/solo_play_view.dart';
+import 'package:memory_weakness/ui/solo/solo_result_page.dart';
 import 'package:provider/provider.dart';
 
 class SoloPlayPage extends StatelessWidget {
@@ -115,6 +117,9 @@ Widget back(SoloPlayViewModel model, int id) {
           if (model.openIds.length == 2) {
             model.isVisible = true;
           }
+          if (!model.knownList.contains(id)) {
+            model.knownList.add(id);
+          }
           model.notify();
         },
       ),
@@ -148,9 +153,6 @@ Widget checkButton(SoloPlayViewModel model, BuildContext context) {
             if (myHp == 0) {
               model.grayList.add(model.turn);
             }
-            if (model.grayList.length == model.memberQuantity) {
-              // TODO
-            }
             var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
             while (model.grayList.contains(nextTurnIndex)) {
               nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
@@ -161,8 +163,14 @@ Widget checkButton(SoloPlayViewModel model, BuildContext context) {
           model.isVisible = false;
           model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
           model.notify();
+          if (model.grayList.length == model.memberQuantity ||
+              !model.visibleList.contains(true)) {
+            Navigator.of(context).push<dynamic>(
+              SoloResultPage.route(),
+            );
+          }
           if (model.turn != 0) {
-            cpuTurn(model, model.turn);
+            cpuTurn(model, model.turn, context);
           }
         },
       ),
@@ -187,15 +195,13 @@ Widget passButton(SoloPlayViewModel model, BuildContext context) {
           while (model.grayList.contains(nextTurnIndex)) {
             nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
           }
-          print(nextTurnIndex);
           model.turn = nextTurnIndex;
           model.openIds = [];
           model.isVisible = false;
           model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
-          print(model.isVisible);
           model.notify();
           if (model.turn != 0) {
-            cpuTurn(model, model.turn);
+            cpuTurn(model, model.turn, context);
           }
         },
       ),
@@ -251,10 +257,19 @@ List<Widget> hearts(int hp, int maxHp) {
   return hearts;
 }
 
-void cpuTurn(SoloPlayViewModel model, int index) async {
-  await cpuFace(model, 0);
-  await cpuFace(model, 1);
-  await cpuCheck(model);
+Future<void> cpuTurn(
+    SoloPlayViewModel model, int cpuIndex, BuildContext context) async {
+  if (model.grayList.length == model.memberQuantity ||
+      !model.visibleList.contains(true)) {
+    Navigator.of(context).push<dynamic>(
+      SoloResultPage.route(),
+    );
+  }
+  if (model.knownList.length > model.knownList.toSet().length) {
+    await selectCard(model, cpuIndex, context);
+  } else {
+    await randomSelect(model, cpuIndex, context);
+  }
 }
 
 Future<void> cpuFace(SoloPlayViewModel model, int id) async {
@@ -262,11 +277,14 @@ Future<void> cpuFace(SoloPlayViewModel model, int id) async {
   if (model.openIds.length == 2) {
     model.isVisible = true;
   }
+  if (!model.knownList.contains(id)) {
+    model.knownList.add(id);
+  }
   await Future.delayed(const Duration(seconds: 3));
   model.notify();
 }
 
-Future<void> cpuCheck(SoloPlayViewModel model) async {
+Future<void> cpuCheck(SoloPlayViewModel model, BuildContext context) async {
   var myHp = model.hpList[model.turn];
   if (model.valueList[model.openIds[0]] == model.valueList[model.openIds[1]]) {
     model.visibleList[model.openIds[0]] = false;
@@ -279,9 +297,6 @@ Future<void> cpuCheck(SoloPlayViewModel model) async {
       model.grayList.add(model.turn);
     }
     model.hpList[model.turn] = myHp;
-    if (model.grayList.length == model.memberQuantity) {
-      // TODO
-    }
     var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
     while (model.grayList.contains(nextTurnIndex)) {
       nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
@@ -293,12 +308,17 @@ Future<void> cpuCheck(SoloPlayViewModel model) async {
   model.turnText = model.turn == 0 ? 'Player' : 'CPU${model.turn}';
   await Future.delayed(const Duration(seconds: 3));
   model.notify();
-  if (model.turn != 0) {
-    cpuTurn(model, model.turn);
+  if (model.grayList.length == model.memberQuantity ||
+      !model.visibleList.contains(true)) {
+    Navigator.of(context).push<dynamic>(
+      SoloResultPage.route(),
+    );
+  } else if (model.turn != 0) {
+    await cpuTurn(model, model.turn, context);
   }
 }
 
-Future<void> cpuPass(SoloPlayViewModel model) async {
+Future<void> cpuPass(SoloPlayViewModel model, BuildContext context) async {
   var nextTurnIndex = (model.turn + 1) % model.memberQuantity;
   while (model.grayList.contains(nextTurnIndex)) {
     nextTurnIndex = (nextTurnIndex + 1) % model.memberQuantity;
@@ -310,6 +330,204 @@ Future<void> cpuPass(SoloPlayViewModel model) async {
   await Future.delayed(const Duration(seconds: 3));
   model.notify();
   if (model.turn != 0) {
-    cpuTurn(model, model.turn);
+    await cpuTurn(model, model.turn, context);
   }
+}
+
+Future<void> selectCard(
+    SoloPlayViewModel model, int cpuIndex, BuildContext context) async {
+  int sameValue = getSameValue(model.knownList);
+  List<int> tmpList = model.knownList;
+  final selectedIndex = tmpList.indexOf(sameValue);
+  await cpuFace(model, selectedIndex);
+  List<double> switchingPoint =
+      getSwitchingPoint(model.difficultyList[cpuIndex]);
+  final rand = math.Random();
+  final probability = rand.nextDouble();
+  if (probability < switchingPoint[0]) {
+    final secondIndex = tmpList.indexOf(sameValue, selectedIndex + 1);
+    await cpuFace(model, secondIndex);
+    await cpuCheck(model, context);
+  } else if (probability < switchingPoint[1]) {
+    final secondIndex = tmpList.indexOf(sameValue, selectedIndex + 1);
+    await cpuFace(model, secondIndex);
+    await cpuPass(model, context);
+  } else if (probability < switchingPoint[2]) {
+    int secondIndex = rand.nextInt(model.questionQuantity * 2);
+    while (selectedIndex == secondIndex || !model.visibleList[secondIndex]) {
+      secondIndex = rand.nextInt(model.questionQuantity * 2);
+    }
+    await cpuFace(model, secondIndex);
+    await cpuCheck(model, context);
+  } else if (probability < switchingPoint[3]) {
+    int secondIndex = rand.nextInt(model.questionQuantity * 2);
+    while (selectedIndex == secondIndex || !model.visibleList[secondIndex]) {
+      secondIndex = rand.nextInt(model.questionQuantity * 2);
+    }
+    await cpuFace(model, secondIndex);
+    await cpuCheck(model, context);
+  } else {
+    await randomSelect(model, cpuIndex, context);
+  }
+}
+
+List<double> getSwitchingPoint(int difficulty) {
+  List<double> switchingPoint = [];
+  switch (difficulty) {
+    case 1:
+      switchingPoint = [0.15, 0.25, 0.35, 0.5];
+      break;
+    case 2:
+      switchingPoint = [0.4, 0.5, 0.55, 0.65];
+      break;
+    case 3:
+      switchingPoint = [0.65, 0.7, 0.75, 0.8];
+      break;
+    case 4:
+      switchingPoint = [0.9, 0.95, 0.95, 0.95];
+      break;
+    default:
+  }
+  return switchingPoint;
+}
+
+Future<void> randomSelect(
+    SoloPlayViewModel model, int index, BuildContext context) async {
+  final rand = math.Random();
+  int selectedIndex = rand.nextInt(model.questionQuantity * 2);
+  while (!model.visibleList[selectedIndex]) {
+    selectedIndex = rand.nextInt(model.questionQuantity * 2);
+  }
+  await cpuFace(model, selectedIndex);
+  bool willMatch = true;
+
+  double probability = (rand.nextInt(10) + 1) * 0.1;
+  switch (model.difficultyList[index]) {
+    case 1:
+      if (probability > 0.6) {
+        willMatch = false;
+      }
+      break;
+    case 2:
+      if (probability > 0.7) {
+        willMatch = false;
+      }
+      break;
+    case 3:
+      if (probability > 0.8) {
+        willMatch = false;
+      }
+      break;
+    case 4:
+      if (probability > 0.9) {
+        willMatch = false;
+      }
+      break;
+    default:
+  }
+
+  bool isKnown = false;
+  final tmpValue = model.valueList[selectedIndex];
+  if (model.knownList.contains(selectedIndex)) {
+    var tmpList = model.knownList;
+    tmpList.remove(selectedIndex);
+    final tmpIndex = model.valueList.indexOf(tmpValue, selectedIndex + 1);
+    if (model.knownList.contains(tmpIndex)) {
+      isKnown = true;
+    }
+  } else if (model.knownList.contains(tmpValue)) {
+    isKnown = true;
+  }
+
+  if (isKnown && willMatch) {
+    int secondIndex = model.valueList.indexOf(model.valueList[selectedIndex]);
+    if (selectedIndex == secondIndex) {
+      secondIndex = model.valueList
+          .indexOf(model.valueList[selectedIndex], selectedIndex + 1);
+    }
+    await cpuFace(model, secondIndex);
+    await cpuCheck(model, context);
+  } else {
+    int secondIndex = rand.nextInt(model.questionQuantity * 2);
+    while (!model.visibleList[secondIndex] || selectedIndex == secondIndex) {
+      secondIndex = rand.nextInt(model.questionQuantity * 2);
+    }
+    await cpuFace(model, secondIndex);
+
+    probability = rand.nextDouble();
+    if (model.valueList[selectedIndex] == model.valueList[secondIndex]) {
+      switch (model.difficultyList[index]) {
+        case 1:
+          if (probability < 0.4) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        case 2:
+          if (probability < 0.6) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        case 3:
+          if (probability < 0.8) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        case 4:
+          if (probability < 1) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        default:
+      }
+    } else {
+      switch (model.difficultyList[index]) {
+        case 1:
+          if (probability < 0.3) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        case 2:
+          if (probability < 0.2) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        case 3:
+          if (probability < 0.1) {
+            await cpuCheck(model, context);
+          } else {
+            await cpuPass(model, context);
+          }
+          break;
+        case 4:
+          await cpuPass(model, context);
+          break;
+        default:
+      }
+    }
+  }
+}
+
+int getSameValue(List<int> knownList) {
+  List<int> tmpList = knownList;
+  int sameValue = 0;
+  tmpList.sort((num1, num2) => num1 - num2);
+  for (int i = 0; i < tmpList.length - 1; i++) {
+    if (tmpList[i] == tmpList[i + 1]) {
+      sameValue = tmpList[i];
+      break;
+    }
+  }
+  return sameValue;
 }

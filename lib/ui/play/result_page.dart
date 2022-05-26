@@ -34,6 +34,7 @@ class ResultPage extends StatelessWidget {
       onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: const Text('RESULT'),
         ),
         body: Center(

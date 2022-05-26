@@ -136,13 +136,7 @@ class SettingCpuPage extends StatelessWidget {
                           ),
                         ),
                         onTap: () async {
-                          initSoloPlay(model, context);
-                          // await createRoom(
-                          //     model.selectedQuestionQuantity,
-                          //     model.selectedMaxMember,
-                          //     model.selectedHP,
-                          //     roomName,
-                          //     '');
+                          await initSoloPlay(model, context);
                           Navigator.of(context).push<dynamic>(
                             SoloPlayPage.route(),
                           );
@@ -371,7 +365,7 @@ Widget cpu(int index, SettingCpuViewModel model,
   }
 }
 
-void initSoloPlay(
+Future<void> initSoloPlay(
     SettingCpuViewModel settingModel, BuildContext context) async {
   final meatDao = MeatDao();
   List<int> valueList = [];
@@ -397,14 +391,23 @@ void initSoloPlay(
 
   final playModel = context.read<SoloPlayViewModel>();
   playModel.maxHP = settingModel.selectedHP;
+  playModel.pointList = [];
+  playModel.hpList = [];
   for (int i = 0; i < settingModel.cpuQuantity + 1; i++) {
     playModel.pointList.add(0);
     playModel.hpList.add(playModel.maxHP);
   }
+  playModel.grayList = [];
   playModel.valueList = valueList;
   playModel.pathList = pathList;
+  playModel.openIds = [];
   playModel.visibleList = visibleList;
+  playModel.knownList = [];
   playModel.questionQuantity = settingModel.selectedQuestionQuantity;
   playModel.memberQuantity = settingModel.cpuQuantity + 1;
+  playModel.difficultyList = settingModel.difficultyList;
+  playModel.turn = 0;
+  playModel.turnText = 'Player';
+  playModel.isVisible = false;
   playModel.notify();
 }

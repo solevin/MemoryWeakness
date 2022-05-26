@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:memory_weakness/ui/room/room_list_page.dart';
 import 'package:memory_weakness/ui/home/home_page_view.dart';
 import 'package:memory_weakness/ui/setting/setting_page.dart';
+import 'package:memory_weakness/ui/solo/setting_cpu_view.dart';
 import 'package:memory_weakness/ui/solo/setting_cpu_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -70,6 +71,7 @@ class HomePage extends StatelessWidget {
                     ),
                   ),
                   onTap: () {
+                    context.read<SettingCpuViewModel>().init();
                     Navigator.of(context).push<dynamic>(
                       SettingCpuPage.route(),
                     );
