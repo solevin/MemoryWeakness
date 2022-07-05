@@ -44,10 +44,16 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
+<<<<<<< HEAD
 	<false/>
 	<key>UTImportedTypeDeclarations</key>
 	<array>
 		<dict/>
 	</array>
+=======
+	<true/>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+>>>>>>> a9e90a199de805f21c362d817ad656ad9a6da4d1
 </dict>
 </plist>
