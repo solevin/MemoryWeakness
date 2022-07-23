@@ -1,7 +1,7 @@
 # Refferece: https://github.com/flutter/flutter/blob/master/.gitignore
 
 # Fvm
-.fvm/
+.fvm/flutter_sdk/
 
 # Miscellaneous
 *.class
