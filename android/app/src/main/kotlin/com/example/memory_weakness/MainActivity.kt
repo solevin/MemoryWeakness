@@ -1,4 +1,4 @@
-package com.example.memory_weakness
+package com.solevin.memory_weakness
 
 import io.flutter.embedding.android.FlutterActivity
 
